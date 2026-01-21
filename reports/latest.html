@@ -25,13 +25,10 @@
     .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
     .card h2{margin:0 0 8px 0;font-size:14px}
-    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input, select{background:#0f1626;border:1px solid var(--line);color:var(--text);padding:10px 10px;border-radius:12px;outline:none;font-size:13px}
-    input{flex:1;min-width:220px}
     .hint{font-size:12px;color:var(--muted);margin-top:6px}
     .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);margin-top:10px}
     table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;background:#0f1626}
-    thead th{position:sticky;top:0;background:#0f1626;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap;cursor:pointer}
+    thead th{position:sticky;top:0;background:#0f1626;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap}
     tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
     tbody tr:hover td{background:rgba(138,180,255,.06)}
     .num{text-align:right}
@@ -51,8 +48,8 @@
         </div>
         <div class="spacer"></div>
         <div class="pills" aria-label="trade type">
-          <div class="pill on" id="pillA1" data-type="A1">A1 (매매)</div>
-          <div class="pill" id="pillB1" data-type="B1">B1 (전세)</div>
+          <div class="pill on" id="pillA1">A1 (매매)</div>
+          <div class="pill" id="pillB1">B1 (전세)</div>
         </div>
         <span class="badge" id="lastLoaded">loaded: -</span>
       </div>
@@ -61,109 +58,33 @@
 
   <div class="wrap">
 
-    <!-- 1) 전체 -->
-    <div class="card" id="secAll">
-      <h2>1) 전체 (평형구간별 + ALL_BINS)</h2>
-      <div class="controls">
-        <input id="q_all" placeholder="검색: 예) ALL_BINS / 66-98" />
-        <select id="bin_all">
-          <option value="">평형구간(전체)</option>
-          <option value="<33">&lt;33</option>
-          <option value="33-65">33-65</option>
-          <option value="66-98">66-98</option>
-          <option value="99-131">99-131</option>
-          <option value="132-164">132-164</option>
-          <option value=">=165">&gt;=165</option>
-          <option value="ALL_BINS">ALL_BINS</option>
-        </select>
-        <select id="sort_all">
-          <option value="avg_change_pct">정렬: 평균가 변화율</option>
-          <option value="new_premium_pct">정렬: 신규 프리미엄</option>
-          <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
-          <option value="curr_avg_eok">정렬: 현재 평균가</option>
-          <option value="curr_cnt">정렬: 현재 매물수</option>
-        </select>
-        <select id="dir_all">
-          <option value="desc">내림차순</option>
-          <option value="asc">오름차순</option>
-        </select>
-        <span class="badge" id="cnt_all">rows: -</span>
-      </div>
-      <div class="hint">• ALL_BINS는 평형구간 전체 합산</div>
+    <div class="card">
+      <h2>1) 전체</h2>
+      <div class="hint">• 평형구간별 + ALL_BINS</div>
       <div class="tableWrap"><table><thead><tr id="thead_all"></tr></thead><tbody id="tbody_all"></tbody></table></div>
       <div class="mini" id="meta_all"></div>
+      <span class="badge" id="cnt_all">rows: -</span>
     </div>
 
-    <!-- 2) 지역별 -->
-    <div class="card" id="secRegion">
-      <h2>2) 지역별 (서울시=시·구 / 경기도=도·시·구)</h2>
-      <div class="controls">
-        <input id="q_region" placeholder="검색: 예) 서울시 / 성동구 / 경기도 / 분당구 / ALL_BINS" />
-        <select id="bin_region">
-          <option value="">평형구간(전체)</option>
-          <option value="<33">&lt;33</option>
-          <option value="33-65">33-65</option>
-          <option value="66-98">66-98</option>
-          <option value="99-131">99-131</option>
-          <option value="132-164">132-164</option>
-          <option value=">=165">&gt;=165</option>
-          <option value="ALL_BINS">ALL_BINS</option>
-        </select>
-        <select id="sort_region">
-          <option value="avg_change_pct">정렬: 평균가 변화율</option>
-          <option value="new_premium_pct">정렬: 신규 프리미엄</option>
-          <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
-          <option value="curr_avg_eok">정렬: 현재 평균가</option>
-          <option value="curr_cnt">정렬: 현재 매물수</option>
-        </select>
-        <select id="dir_region">
-          <option value="desc">내림차순</option>
-          <option value="asc">오름차순</option>
-        </select>
-        <span class="badge" id="cnt_region">rows: -</span>
-      </div>
-      <div class="hint">• region3는 경기도에서만 사용(서울시는 비움)</div>
+    <div class="card">
+      <h2>2) 지역별</h2>
+      <div class="hint">• 서울시=시·구 / 경기도=도·시·구</div>
       <div class="tableWrap"><table><thead><tr id="thead_region"></tr></thead><tbody id="tbody_region"></tbody></table></div>
       <div class="mini" id="meta_region"></div>
+      <span class="badge" id="cnt_region">rows: -</span>
     </div>
 
-    <!-- 3) 단지별 -->
-    <div class="card" id="secComplex">
+    <div class="card">
       <h2>3) 단지별</h2>
-      <div class="controls">
-        <input id="q_complex" placeholder="검색: 예) 옥수리버젠 / 100692 / 성동구 / ALL_BINS" />
-        <select id="bin_complex">
-          <option value="">평형구간(전체)</option>
-          <option value="<33">&lt;33</option>
-          <option value="33-65">33-65</option>
-          <option value="66-98">66-98</option>
-          <option value="99-131">99-131</option>
-          <option value="132-164">132-164</option>
-          <option value=">=165">&gt;=165</option>
-          <option value="ALL_BINS">ALL_BINS</option>
-        </select>
-        <select id="sort_complex">
-          <option value="avg_change_pct">정렬: 평균가 변화율</option>
-          <option value="new_premium_pct">정렬: 신규 프리미엄</option>
-          <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
-          <option value="curr_avg_eok">정렬: 현재 평균가</option>
-          <option value="curr_cnt">정렬: 현재 매물수</option>
-        </select>
-        <select id="dir_complex">
-          <option value="desc">내림차순</option>
-          <option value="asc">오름차순</option>
-        </select>
-        <span class="badge" id="cnt_complex">rows: -</span>
-      </div>
-      <div class="hint">• 단지별은 행 수가 많아질 수 있어 검색을 적극 추천</div>
+      <div class="hint">• 단지별은 행이 많아질 수 있음</div>
       <div class="tableWrap"><table><thead><tr id="thead_complex"></tr></thead><tbody id="tbody_complex"></tbody></table></div>
       <div class="mini" id="meta_complex"></div>
+      <span class="badge" id="cnt_complex">rows: -</span>
     </div>
 
   </div>
 
 <script>
-  // 최신 CSV (same folder)
   const PATHS = {
     A1: {
       all:    "./report_all_bins_A1_latest.csv",
@@ -224,11 +145,11 @@
     return "";
   }
 
-  function renderTable(sectionId, cols, rows, viewCols){
+  function render(sectionId, cols, rows, viewCols){
     const thead=document.getElementById(`thead_${sectionId}`);
     const tbody=document.getElementById(`tbody_${sectionId}`);
-    const cnt=document.getElementById(`cnt_${sectionId}`);
     const meta=document.getElementById(`meta_${sectionId}`);
+    const cnt=document.getElementById(`cnt_${sectionId}`);
 
     viewCols = viewCols.filter(c => cols.includes(c));
 
@@ -236,13 +157,6 @@
     viewCols.forEach(c=>{
       const th=document.createElement("th");
       th.textContent=c;
-      th.onclick=()=> { // header sort sync
-        document.getElementById(`sort_${sectionId}`).value = c;
-        // toggle dir
-        const dirEl=document.getElementById(`dir_${sectionId}`);
-        dirEl.value = (dirEl.value === "desc") ? "asc" : "desc";
-        applySection(sectionId, cols, rows, viewCols);
-      };
       thead.appendChild(th);
     });
 
@@ -268,33 +182,11 @@
     meta.textContent=`columns: ${cols.join(", ")}`;
   }
 
-  function applySection(sectionId, cols, baseRows, viewCols){
-    const q=document.getElementById(`q_${sectionId}`).value.trim().toLowerCase();
-    const bin=document.getElementById(`bin_${sectionId}`).value;
-    const sortKey=document.getElementById(`sort_${sectionId}`).value;
-    const dir=document.getElementById(`dir_${sectionId}`).value;
-
-    let out=baseRows.slice();
-    if (bin) out = out.filter(r => String(r.spc_bin||"") === bin);
-    if (q) out = out.filter(r => JSON.stringify(r).toLowerCase().includes(q));
-
-    out.sort((a,b)=>{
-      const na=toNum(a[sortKey]), nb=toNum(b[sortKey]);
-      let cmp=0;
-      if (na!=null && nb!=null) cmp = na - nb;
-      else cmp = String(a[sortKey]||"").localeCompare(String(b[sortKey]||""), "ko");
-      return (dir==="asc") ? cmp : -cmp;
-    });
-
-    renderTable(sectionId, cols, out, viewCols);
-  }
-
   async function loadOne(kind){
     const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${kind}: ${res.status} ${res.statusText}`);
-    const text = await res.text();
-    return parseCSV(text);
+    return parseCSV(await res.text());
   }
 
   async function loadAll(){
@@ -308,45 +200,22 @@
         loadOne("complex"),
       ]);
 
-      // view columns
       const vc_all = ["spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
       const vc_region = ["region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
       const vc_complex = ["hscpNo","complex_name","region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
 
-      // store base rows on DOM (simple)
-      window.__DATA__ = { all, region, complex };
+      render("all", all.cols, all.rows, vc_all);
+      render("region", region.cols, region.rows, vc_region);
+      render("complex", complex.cols, complex.rows, vc_complex);
 
-      // initial render (apply filters/sort)
-      applySection("all", all.cols, all.rows, vc_all);
-      applySection("region", region.cols, region.rows, vc_region);
-      applySection("complex", complex.cols, complex.rows, vc_complex);
-
-      document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toISOString().slice(0,19).replace('T',' ')}`;
-      subtitle.textContent = `${state.type} · 전체/지역/단지 3종 표 표시`;
-
-      // bind inputs (once)
-      bindSection("all", all.cols, all.rows, vc_all);
-      bindSection("region", region.cols, region.rows, vc_region);
-      bindSection("complex", complex.cols, complex.rows, vc_complex);
+      document.getElementById("lastLoaded").textContent =
+        `loaded: ${new Date().toISOString().slice(0,19).replace('T',' ')}`;
+      subtitle.textContent = `${state.type} · 전체/지역/단지 전체 행 표시`;
 
     }catch(e){
       subtitle.textContent = `로딩 실패: ${e.message}`;
       console.error(e);
     }
-  }
-
-  function bindSection(sectionId, cols, rows, viewCols){
-    const q=document.getElementById(`q_${sectionId}`);
-    const bin=document.getElementById(`bin_${sectionId}`);
-    const sort=document.getElementById(`sort_${sectionId}`);
-    const dir=document.getElementById(`dir_${sectionId}`);
-    const handler = ()=> applySection(sectionId, cols, rows, viewCols);
-
-    // remove+add to avoid multiple listeners on reload
-    q.oninput = handler;
-    bin.onchange = handler;
-    sort.onchange = handler;
-    dir.onchange = handler;
   }
 
   function setType(t){
