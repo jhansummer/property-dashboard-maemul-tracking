@@ -60,7 +60,7 @@
 
     <div class="card">
       <h2>1) 전체</h2>
-      <div class="hint">• 평형구간별 + ALL_BINS</div>
+      <div class="hint">• CSV의 모든 컬럼을 그대로 표시</div>
       <div class="tableWrap"><table><thead><tr id="thead_all"></tr></thead><tbody id="tbody_all"></tbody></table></div>
       <div class="mini" id="meta_all"></div>
       <span class="badge" id="cnt_all">rows: -</span>
@@ -68,7 +68,7 @@
 
     <div class="card">
       <h2>2) 지역별</h2>
-      <div class="hint">• 서울시=시·구 / 경기도=도·시·구</div>
+      <div class="hint">• CSV의 모든 컬럼을 그대로 표시</div>
       <div class="tableWrap"><table><thead><tr id="thead_region"></tr></thead><tbody id="tbody_region"></tbody></table></div>
       <div class="mini" id="meta_region"></div>
       <span class="badge" id="cnt_region">rows: -</span>
@@ -76,7 +76,7 @@
 
     <div class="card">
       <h2>3) 단지별</h2>
-      <div class="hint">• 단지별은 행이 많아질 수 있음</div>
+      <div class="hint">• CSV의 모든 컬럼을 그대로 표시</div>
       <div class="tableWrap"><table><thead><tr id="thead_complex"></tr></thead><tbody id="tbody_complex"></tbody></table></div>
       <div class="mini" id="meta_complex"></div>
       <span class="badge" id="cnt_complex">rows: -</span>
@@ -137,7 +137,6 @@
     const v=parseFloat(s);
     return Number.isFinite(v)?v:null;
   }
-
   function pctClass(v){
     if (v==null) return "";
     if (v>0) return "good";
@@ -145,16 +144,21 @@
     return "";
   }
 
-  function render(sectionId, cols, rows, viewCols){
+  // 숫자/퍼센트 스타일링 적용할 "대표 컬럼명들" (있으면 적용)
+  const NUM_COLS = new Set([
+    "prev_cnt","curr_cnt","new_cnt","del_cnt",
+    "prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok",
+    "avg_change_pct","new_premium_pct","del_premium_pct"
+  ]);
+
+  function render(sectionId, cols, rows){
     const thead=document.getElementById(`thead_${sectionId}`);
     const tbody=document.getElementById(`tbody_${sectionId}`);
     const meta=document.getElementById(`meta_${sectionId}`);
     const cnt=document.getElementById(`cnt_${sectionId}`);
 
-    viewCols = viewCols.filter(c => cols.includes(c));
-
     thead.innerHTML="";
-    viewCols.forEach(c=>{
+    cols.forEach(c=>{
       const th=document.createElement("th");
       th.textContent=c;
       thead.appendChild(th);
@@ -163,11 +167,11 @@
     tbody.innerHTML="";
     rows.forEach(r=>{
       const tr=document.createElement("tr");
-      viewCols.forEach(c=>{
+      cols.forEach(c=>{
         const td=document.createElement("td");
         const val=r[c] ?? "";
-        const isNum = ["prev_cnt","curr_cnt","new_cnt","del_cnt","prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok","avg_change_pct","new_premium_pct","del_premium_pct"].includes(c);
-        if (isNum) td.classList.add("num");
+
+        if (NUM_COLS.has(c)) td.classList.add("num");
         if (String(val).endsWith('%')){
           td.classList.add("pct");
           td.classList.add(pctClass(toNum(val)));
@@ -200,13 +204,9 @@
         loadOne("complex"),
       ]);
 
-      const vc_all = ["spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
-      const vc_region = ["region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
-      const vc_complex = ["hscpNo","complex_name","region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
-
-      render("all", all.cols, all.rows, vc_all);
-      render("region", region.cols, region.rows, vc_region);
-      render("complex", complex.cols, complex.rows, vc_complex);
+      render("all", all.cols, all.rows);
+      render("region", region.cols, region.rows);
+      render("complex", complex.cols, complex.rows);
 
       document.getElementById("lastLoaded").textContent =
         `loaded: ${new Date().toISOString().slice(0,19).replace('T',' ')}`;
