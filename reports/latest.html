@@ -2,306 +2,408 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>최신 리포트 | 매물트래킹</title>
-  <meta name="description" content="단지/평형별 매물 수급, 가격 흐름, 신규·삭제 매물 변화를 요약한 최신 리포트" />
-
-  <!-- ✅ (나중에 애드센스 승인 후 여기에 스크립트 붙이면 됨) -->
-  <!--
-  <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXX"
-    crossorigin="anonymous"></script>
-  -->
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>매물 트래킹 대시보드 (Latest)</title>
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f172a;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --line:#1f2a44;
-      --accent:#60a5fa;
-      --good:#34d399;
-      --bad:#f87171;
+      --bg:#0b0f17;
+      --card:#121a2a;
+      --muted:#7f8ea3;
+      --text:#e8eef7;
+      --line:#24314a;
+      --pill:#1a2640;
+      --pillOn:#2a3a5f;
+      --accent:#8ab4ff;
+      --good:#66e3a6;
+      --bad:#ff7b7b;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
-      background: linear-gradient(180deg, var(--bg), #050816 60%);
-      color:var(--text);
-      line-height:1.6;
-    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--text)}
     a{color:var(--accent); text-decoration:none}
-    a:hover{text-decoration:underline}
-    header{
-      padding:18px 16px 8px;
+    .wrap{max-width:1100px; margin:0 auto; padding:14px}
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:rgba(11,15,23,.92); backdrop-filter: blur(10px);
       border-bottom:1px solid var(--line);
-      position:static; top:0;
-      background: rgba(11,18,32,.9);
-      backdrop-filter: blur(10px);
     }
-    .wrap{max-width:980px; margin:0 auto; padding:16px}
-    .top{
-      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .title h1{margin:0; font-size:20px}
-    .title .meta{color:var(--muted); font-size:13px; margin-top:4px}
+    .topbar .wrap{padding:10px 14px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .title{font-size:16px; font-weight:700}
+    .sub{font-size:12px; color:var(--muted)}
+    .spacer{flex:1}
+    .pills{display:flex; gap:8px; flex-wrap:wrap}
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border:1px solid var(--line); border-radius:999px;
-      color:var(--muted); font-size:13px;
+      background:var(--pill); border:1px solid var(--line); color:var(--text);
+      padding:7px 10px; border-radius:999px; font-size:12px;
+      cursor:pointer; user-select:none;
     }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-      margin-top:14px;
-    }
-    @media (min-width: 920px){
-      .grid{grid-template-columns: 1.1fr .9fr}
-    }
+    .pill.on{background:var(--pillOn); border-color:#3a4a70}
     .card{
-      background:rgba(15,23,42,.85);
+      background:var(--card);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:14px;
-      overflow:hidden;
+      padding:12px;
+      margin-top:12px;
     }
-    .card h2{margin:0 0 8px; font-size:16px}
-    .sub{color:var(--muted); font-size:13px; margin:0 0 10px}
-    .kpi{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:10px;
-      margin-top:10px;
+    .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    input, select{
+      background:#0f1626; border:1px solid var(--line); color:var(--text);
+      padding:10px 10px; border-radius:12px; outline:none;
+      font-size:13px;
     }
-    .kpi .box{
-      border:1px solid var(--line);
-      border-radius:12px;
+    input{flex:1; min-width:220px}
+    .hint{font-size:12px; color:var(--muted); margin-top:6px}
+    .tableWrap{overflow:auto; border-radius:12px; border:1px solid var(--line); margin-top:10px}
+    table{border-collapse:separate; border-spacing:0; width:100%; min-width:900px; background:#0f1626}
+    thead th{
+      position:sticky; top:0;
+      background:#0f1626; color:#cfe0ff;
+      font-size:12px; text-align:left;
+      border-bottom:1px solid var(--line);
       padding:10px;
-      background:rgba(2,6,23,.35);
+      white-space:nowrap;
+      cursor:pointer;
     }
-    .kpi .label{color:var(--muted); font-size:12px}
-    .kpi .val{font-size:18px; margin-top:3px}
-    .val.good{color:var(--good)}
-    .val.bad{color:var(--bad)}
-
-    /* ✅ 이미지 그래프 */
-    figure{margin:0}
-    img{
-      width:100%;
-      height:auto;
-      border-radius:12px;
+    tbody td{
+      padding:10px;
+      border-bottom:1px solid rgba(36,49,74,.55);
+      font-size:12px; color:var(--text);
+      white-space:nowrap;
+    }
+    tbody tr:hover td{background:rgba(138,180,255,.06)}
+    .muted{color:var(--muted)}
+    .num{text-align:right}
+    .pct.good{color:var(--good); font-weight:700}
+    .pct.bad{color:var(--bad); font-weight:700}
+    .badge{
+      font-size:11px; color:#cfe0ff;
       border:1px solid var(--line);
-      background:#0b1020;
+      padding:4px 8px; border-radius:999px;
+      background:#0f1626;
     }
-    figcaption{color:var(--muted); font-size:12px; margin-top:8px}
-
-    /* ✅ 표 */
-    .tableWrap{
-      width:100%;
-      overflow:auto;
-      border-radius:12px;
-      border:1px solid var(--line);
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:720px; /* 모바일에서 가로 스크롤 */
-      background:rgba(2,6,23,.25);
-    }
-    th,td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(31,42,68,.8);
-      vertical-align:top;
-      font-size:13px;
-    }
-    th{
-      text-align:left;
-      color:#cbd5e1;
-      position:sticky;
-      top:0;
-      background:rgba(15,23,42,.95);
-      z-index:1;
-    }
-    tr:hover td{background:rgba(96,165,250,.06)}
-    .num{white-space:nowrap; font-variant-numeric: tabular-nums;}
-    .small{color:var(--muted); font-size:12px}
-    .footer{
-      margin:18px 0 10px;
-      color:var(--muted);
-      font-size:12px;
-    }
-    .nav{
-      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;
-    }
-    .btn{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:9px 12px;
-      border-radius:10px;
-      border:1px solid var(--line);
-      background:rgba(2,6,23,.35);
-      color:var(--text);
-      font-size:13px;
-    }
-    .btn:hover{border-color:rgba(96,165,250,.6)}
-    code{color:#cbd5e1}
+    .footer{padding:30px 0; color:var(--muted); font-size:12px}
+    .mini{font-size:11px; color:var(--muted)}
   </style>
 </head>
 
 <body>
-  <header>
-    <div class="wrap top">
-      <div class="title">
-        <h1>최신 리포트</h1>
-        <div class="meta">업데이트: <strong>2026-01-19 17:00</strong> · 데이터: 네이버부동산 스냅샷</div>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="row">
+        <div>
+          <div class="title">매물 트래킹 대시보드</div>
+          <div class="sub" id="subtitle">CSV 로딩 중…</div>
+        </div>
+        <div class="spacer"></div>
+
+        <div class="pills" aria-label="trade type">
+          <div class="pill on" id="pillA1" data-type="A1">A1 (매매)</div>
+          <div class="pill" id="pillB1" data-type="B1">B1 (전세)</div>
+        </div>
       </div>
-      <div class="pill">📌 고정 URL: <code>/reports/latest.html</code></div>
-      <div class="nav">
-        <a class="btn" href="../">🏠 홈</a>
-        <a class="btn" href="../about.html">ℹ️ About</a>
-        <a class="btn" href="../privacy.html">🛡️ Privacy</a>
-        <a class="btn" href="../contact.html">✉️ Contact</a>
+
+      <div class="row" style="margin-top:10px">
+        <div class="pills" aria-label="level tabs">
+          <div class="pill on" id="tabAll" data-tab="all">1) 전체</div>
+          <div class="pill" id="tabRegion" data-tab="region">2) 지역별</div>
+          <div class="pill" id="tabComplex" data-tab="complex">3) 단지별</div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <span class="badge" id="rowCount">rows: -</span>
+        <span class="badge" id="lastLoaded">loaded: -</span>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="wrap">
-    <!-- ✅ 요약 카드 -->
-    <section class="card">
-      <h2>요약</h2>
-      <p class="sub">어제 만든 리포트 구조(① 수급 변화 ② 가격 흐름 ③ 신규·삭제 매물)를 그대로 웹용으로 배치한 템플릿입니다. 아래 KPI/표/그래프는 예시 값이니 너의 실제 수치로 교체하면 끝.</p>
-
-      <div class="kpi">
-        <div class="box">
-          <div class="label">매매 매물수 변화</div>
-          <div class="val bad">1600 -> 1570 (-2.5%)</div>
-          <div class="small">지난주 같은요일 대비</div>
-        </div>
-        <div class="box">
-          <div class="label">매매 호가 변화</div>
-          <div class="val bad">+2.5%</div>
-          <div class="small">지난주 같은요일 대비</div>
-        </div>        
-        <div class="box">
-          <div class="label">전세 매물수 변화</div>
-          <div class="val bad">-2.5%</div>
-          <div class="small">지난주 같은요일 대비</div>
-        </div>
-        <div class="box">
-          <div class="label">전세 호가 변화</div>
-          <div class="val bad">+2.5%</div>
-          <div class="small">지난주 같은요일 대비</div>
-        </div>              
-        <div class="box">
-          <div class="label">삭제율</div>
-          <div class="val good">14.8%</div>
-          <div class="small">전일 대비 ▲</div>
-        </div>
-        <div class="box">
-          <div class="label">전세 매물 변화</div>
-          <div class="val bad">-1</div>
-          <div class="small">전일 대비</div>
-        </div>
+  <div class="wrap">
+    <div class="card">
+      <div class="controls">
+        <input id="q" placeholder="검색: 예) 성동구 / 분당구 / 옥수리버젠 / 66-98 / ALL_BINS" />
+        <select id="binFilter">
+          <option value="">평형구간(전체)</option>
+          <option value="<33">&lt;33</option>
+          <option value="33-65">33-65</option>
+          <option value="66-98">66-98</option>
+          <option value="99-131">99-131</option>
+          <option value="132-164">132-164</option>
+          <option value=">=165">&gt;=165</option>
+          <option value="ALL_BINS">ALL_BINS</option>
+        </select>
+        <select id="sortKey">
+          <option value="avg_change_pct">정렬: 평균가 변화율</option>
+          <option value="new_premium_pct">정렬: 신규 프리미엄</option>
+          <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
+          <option value="curr_avg_eok">정렬: 현재 평균가</option>
+          <option value="curr_cnt">정렬: 현재 매물수</option>
+        </select>
+        <select id="sortDir">
+          <option value="desc">내림차순</option>
+          <option value="asc">오름차순</option>
+        </select>
       </div>
-    </section>
+      <div class="hint">
+        • 헤더 클릭으로 정렬 가능 · 숫자는 억 단위(eok) · ALL_BINS는 평형구간 전체 합산<br/>
+        • 지역 태그가 없는 단지는 집계에서 제외될 수 있어요.
+      </div>
 
-    <section class="grid">
-      <!-- ✅ 표 카드 -->
-      <section class="card">
-        <h2>핵심 요약 표</h2>
-        <p class="sub">여기에 “어제 만든 표”를 그대로 옮기면 됨. 컬럼은 필요에 따라 늘려도 OK.</p>
-
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="min-width:140px">구분</th>
-                <th class="num">전일</th>
-                <th class="num">금일</th>
-                <th class="num">변화</th>
-                <th style="min-width:260px">해석 메모</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>매물 수</td>
-                <td class="num">25</td>
-                <td class="num">23</td>
-                <td class="num">-2</td>
-                <td>총 매물 감소(공급 축소)</td>
-              </tr>
-              <tr>
-                <td>삭제</td>
-                <td class="num">2</td>
-                <td class="num">4</td>
-                <td class="num">+2</td>
-                <td>소진 속도 증가</td>
-              </tr>
-              <tr>
-                <td>삭제율</td>
-                <td class="num">8.0%</td>
-                <td class="num">14.8%</td>
-                <td class="num">▲</td>
-                <td>체결/거래 가능성↑ 또는 호가 정리</td>
-              </tr>
-              <tr>
-                <td>하위 30% 삭제</td>
-                <td class="num">1</td>
-                <td class="num">3</td>
-                <td class="num">▲</td>
-                <td>저가 매물 소진 여부 체크 포인트</td>
-              </tr>
-              <tr>
-                <td>전세 매물</td>
-                <td class="num">10</td>
-                <td class="num">9</td>
-                <td class="num">-1</td>
-                <td>전세 공급도 동반 축소</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p class="small" style="margin-top:10px">
-          팁) 너는 이미 “A1=매매, B1=전세” 구분을 쓰니까, 표에도 A1/B1 뱃지 달면 더 보기 좋아짐.
-        </p>
-      </section>
-
-      <!-- ✅ 그래프 카드 -->
-      <section class="card">
-        <h2>그래프</h2>
-        <p class="sub">그래프 이미지는 <code>images/</code> 폴더에 올리고 여기서 경로로 연결하면 됨.</p>
-
-        <figure>
-          <!-- ✅ 예시 경로: ../images/price_trend.png -->
-          <img src="../images/price_trend.png" alt="가격 흐름 그래프" />
-          <figcaption>가격 흐름(평형 전체 가중) — 예시 이미지. 파일이 없으면 그래프가 안 보이니 이미지 업로드 후 경로를 맞춰줘.</figcaption>
-        </figure>
-
-        <div style="height:10px"></div>
-
-        <figure>
-          <img src="../images/supply_change.png" alt="수급 변화 그래프" />
-          <figcaption>수급 변화(신규·삭제·총매물) — 예시 이미지</figcaption>
-        </figure>
-      </section>
-    </section>
-
-    <!-- ✅ (선택) 아래에 원문/데이터 출처/로그 링크 영역 -->
-    <section class="card" style="margin-top:14px">
-      <h2>참고</h2>
-      <ul style="margin:0; padding-left:18px">
-        <li>리포트 생성 스크립트: <span class="small">향후 cron + git push로 자동 배포 가능</span></li>
-        <li>데이터 스냅샷 파일: <span class="small">snapshots_merged / snapshot_diff_out</span></li>
-      </ul>
-    </section>
+      <div class="tableWrap">
+        <table id="tbl">
+          <thead><tr id="theadRow"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="mini" id="meta"></div>
+    </div>
 
     <div class="footer">
-      © 매물트래킹 · 마지막 업데이트 시간은 자동으로 갱신되도록 만드는 것을 추천
+      <div>파일명 규칙(필수): reports/report_*_bins_[A1|B1]_latest.csv</div>
+      <div class="muted">GitHub Pages에서는 같은 origin의 CSV를 fetch 해야 CORS 문제가 없습니다.</div>
     </div>
-  </main>
+  </div>
+
+<script>
+  // ====== 설정: CSV 경로 ======
+  const PATHS = {
+    A1: {
+      all:    "./report_all_bins_A1_latest.csv",
+      region: "./report_region_bins_A1_latest.csv",
+      complex:"./report_complex_bins_A1_latest.csv",
+    },
+    B1: {
+      all:    "./report_all_bins_B1_latest.csv",
+      region: "./report_region_bins_B1_latest.csv",
+      complex:"./report_complex_bins_B1_latest.csv",
+    }
+  };
+
+  // ====== 상태 ======
+  let state = {
+    type: "A1",
+    tab: "all",
+    rows: [],
+    cols: [],
+    sort: { key: "avg_change_pct", dir: "desc" },
+  };
+
+  // ====== 유틸 ======
+  function parseCSV(text){
+    // 간단 CSV 파서(따옴표 처리 포함)
+    const lines = text.replace(/\r/g,'').split('\n').filter(x=>x.trim().length>0);
+    if (lines.length < 2) return { cols:[], rows:[] };
+    const cols = splitCSVLine(lines[0]).map(s=>s.trim());
+    const rows = [];
+    for (let i=1;i<lines.length;i++){
+      const parts = splitCSVLine(lines[i]);
+      const obj = {};
+      cols.forEach((c, idx)=> obj[c] = (parts[idx] ?? "").trim());
+      rows.push(obj);
+    }
+    return { cols, rows };
+  }
+
+  function splitCSVLine(line){
+    const out = [];
+    let cur = "", inQ = false;
+    for (let i=0;i<line.length;i++){
+      const ch = line[i];
+      if (ch === '"'){
+        if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ){
+        out.push(cur); cur = "";
+      } else cur += ch;
+    }
+    out.push(cur);
+    return out;
+  }
+
+  function toNum(x){
+    if (x === null || x === undefined) return null;
+    const s = String(x).trim();
+    if (!s) return null;
+    // +0.0% 형태도 처리
+    if (s.endsWith('%')){
+      const v = parseFloat(s.replace('%',''));
+      return Number.isFinite(v) ? v : null;
+    }
+    const v = parseFloat(s);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  function pctClass(v){
+    if (v === null || v === undefined) return "";
+    if (v > 0) return "good";
+    if (v < 0) return "bad";
+    return "";
+  }
+
+  function setPill(el, on){
+    el.classList.toggle("on", !!on);
+  }
+
+  function nowStr(){
+    const d = new Date();
+    const z = (n)=> String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+  }
+
+  // ====== 렌더 ======
+  function renderTable(rows, cols){
+    const thead = document.getElementById("theadRow");
+    const tbody = document.getElementById("tbody");
+
+    // 컬럼 세트: 탭별로 보기 좋게 고정
+    const tab = state.tab;
+    let viewCols = [];
+    if (tab === "all"){
+      viewCols = ["spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
+    } else if (tab === "region"){
+      viewCols = ["region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
+    } else {
+      viewCols = ["hscpNo","complex_name","region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
+    }
+
+    // 실제 존재하는 컬럼만
+    viewCols = viewCols.filter(c => cols.includes(c));
+
+    // 헤더
+    thead.innerHTML = "";
+    viewCols.forEach(c=>{
+      const th = document.createElement("th");
+      th.textContent = c;
+      th.onclick = ()=> {
+        const same = (state.sort.key === c);
+        state.sort.key = c;
+        state.sort.dir = same ? (state.sort.dir === "desc" ? "asc" : "desc") : "desc";
+        document.getElementById("sortKey").value = state.sort.key;
+        document.getElementById("sortDir").value = state.sort.dir;
+        applyFilters();
+      };
+      thead.appendChild(th);
+    });
+
+    // 바디
+    tbody.innerHTML = "";
+    rows.forEach(r=>{
+      const tr = document.createElement("tr");
+      viewCols.forEach(c=>{
+        const td = document.createElement("td");
+        const val = r[c] ?? "";
+        const n = toNum(val);
+
+        const isNumCol = ["prev_cnt","curr_cnt","new_cnt","del_cnt","prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok","avg_change_pct","new_premium_pct","del_premium_pct"].includes(c);
+        if (isNumCol) td.classList.add("num");
+
+        if (String(val).endsWith('%')){
+          td.classList.add("pct");
+          td.classList.add(pctClass(n));
+        }
+
+        td.textContent = val;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("rowCount").textContent = `rows: ${rows.length}`;
+  }
+
+  function applyFilters(){
+    const q = document.getElementById("q").value.trim().toLowerCase();
+    const bin = document.getElementById("binFilter").value;
+    const sortKey = document.getElementById("sortKey").value;
+    const sortDir = document.getElementById("sortDir").value;
+    state.sort = { key: sortKey, dir: sortDir };
+
+    let out = state.rows.slice();
+
+    if (bin){
+      out = out.filter(r => String(r.spc_bin||"") === bin);
+    }
+    if (q){
+      out = out.filter(r => JSON.stringify(r).toLowerCase().includes(q));
+    }
+
+    // sort
+    out.sort((a,b)=>{
+      const ka = a[sortKey], kb = b[sortKey];
+      const na = toNum(ka), nb = toNum(kb);
+
+      let cmp = 0;
+      if (na !== null && nb !== null){
+        cmp = na - nb;
+      } else {
+        cmp = String(ka||"").localeCompare(String(kb||""), "ko");
+      }
+      return (sortDir === "asc") ? cmp : -cmp;
+    });
+
+    renderTable(out, state.cols);
+  }
+
+  async function load(){
+    const url = PATHS[state.type][state.tab] + `?v=${Date.now()}`; // cache bust
+    const subtitle = document.getElementById("subtitle");
+    subtitle.textContent = `로딩: ${url}`;
+
+    try{
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      const text = await res.text();
+      const parsed = parseCSV(text);
+
+      state.cols = parsed.cols;
+      state.rows = parsed.rows;
+
+      document.getElementById("lastLoaded").textContent = `loaded: ${nowStr()}`;
+      subtitle.textContent = `${state.type} · ${state.tab.toUpperCase()} · ${url}`;
+
+      // controls sync
+      document.getElementById("sortKey").value = state.sort.key;
+      document.getElementById("sortDir").value = state.sort.dir;
+
+      applyFilters();
+      document.getElementById("meta").textContent = `columns: ${state.cols.join(", ")}`;
+    }catch(e){
+      subtitle.textContent = `로딩 실패: ${e.message}`;
+      state.cols = [];
+      state.rows = [];
+      renderTable([], []);
+      document.getElementById("meta").textContent =
+        "CSV 파일이 reports/ 폴더에 존재하는지 확인해줘: report_all_bins_[A1|B1]_latest.csv 등";
+    }
+  }
+
+  // ====== 이벤트 ======
+  function setType(t){
+    state.type = t;
+    setPill(document.getElementById("pillA1"), t==="A1");
+    setPill(document.getElementById("pillB1"), t==="B1");
+    load();
+  }
+  function setTab(tab){
+    state.tab = tab;
+    setPill(document.getElementById("tabAll"), tab==="all");
+    setPill(document.getElementById("tabRegion"), tab==="region");
+    setPill(document.getElementById("tabComplex"), tab==="complex");
+    load();
+  }
+
+  document.getElementById("pillA1").onclick = ()=> setType("A1");
+  document.getElementById("pillB1").onclick = ()=> setType("B1");
+  document.getElementById("tabAll").onclick = ()=> setTab("all");
+  document.getElementById("tabRegion").onclick = ()=> setTab("region");
+  document.getElementById("tabComplex").onclick = ()=> setTab("complex");
+
+  document.getElementById("q").addEventListener("input", ()=> applyFilters());
+  document.getElementById("binFilter").addEventListener("change", ()=> applyFilters());
+  document.getElementById("sortKey").addEventListener("change", ()=> applyFilters());
+  document.getElementById("sortDir").addEventListener("change", ()=> applyFilters());
+
+  // init
+  load();
+</script>
 </body>
 </html>
