@@ -7,7 +7,7 @@
   <style>
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
-      --line:#24314a; --pill:#1a2640; --pillOn:#2a3a5f; --accent:#8ab4ff;
+      --line:#24314a; --pill:#1a2640; --pillOn:#2a3a5f;
       --good:#66e3a6; --bad:#ff7b7b;
     }
     *{box-sizing:border-box}
@@ -60,7 +60,7 @@
 
     <div class="card">
       <h2>1) 전체</h2>
-      <div class="hint">• CSV의 모든 컬럼을 그대로 표시</div>
+      <div class="hint">• CSV의 모든 컬럼/모든 행 표시</div>
       <div class="tableWrap"><table><thead><tr id="thead_all"></tr></thead><tbody id="tbody_all"></tbody></table></div>
       <div class="mini" id="meta_all"></div>
       <span class="badge" id="cnt_all">rows: -</span>
@@ -68,7 +68,7 @@
 
     <div class="card">
       <h2>2) 지역별</h2>
-      <div class="hint">• CSV의 모든 컬럼을 그대로 표시</div>
+      <div class="hint">• CSV의 모든 컬럼/모든 행 표시</div>
       <div class="tableWrap"><table><thead><tr id="thead_region"></tr></thead><tbody id="tbody_region"></tbody></table></div>
       <div class="mini" id="meta_region"></div>
       <span class="badge" id="cnt_region">rows: -</span>
@@ -76,7 +76,7 @@
 
     <div class="card">
       <h2>3) 단지별</h2>
-      <div class="hint">• CSV의 모든 컬럼을 그대로 표시</div>
+      <div class="hint">• CSV의 모든 컬럼/모든 행 표시</div>
       <div class="tableWrap"><table><thead><tr id="thead_complex"></tr></thead><tbody id="tbody_complex"></tbody></table></div>
       <div class="mini" id="meta_complex"></div>
       <span class="badge" id="cnt_complex">rows: -</span>
@@ -144,7 +144,6 @@
     return "";
   }
 
-  // 숫자/퍼센트 스타일링 적용할 "대표 컬럼명들" (있으면 적용)
   const NUM_COLS = new Set([
     "prev_cnt","curr_cnt","new_cnt","del_cnt",
     "prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok",
@@ -170,7 +169,6 @@
       cols.forEach(c=>{
         const td=document.createElement("td");
         const val=r[c] ?? "";
-
         if (NUM_COLS.has(c)) td.classList.add("num");
         if (String(val).endsWith('%')){
           td.classList.add("pct");
