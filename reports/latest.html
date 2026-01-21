@@ -6,83 +6,38 @@
   <title>매물 트래킹 대시보드 (Latest)</title>
   <style>
     :root{
-      --bg:#0b0f17;
-      --card:#121a2a;
-      --muted:#7f8ea3;
-      --text:#e8eef7;
-      --line:#24314a;
-      --pill:#1a2640;
-      --pillOn:#2a3a5f;
-      --accent:#8ab4ff;
-      --good:#66e3a6;
-      --bad:#ff7b7b;
+      --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
+      --line:#24314a; --pill:#1a2640; --pillOn:#2a3a5f; --accent:#8ab4ff;
+      --good:#66e3a6; --bad:#ff7b7b;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--text)}
-    a{color:var(--accent); text-decoration:none}
-    .wrap{max-width:1100px; margin:0 auto; padding:14px}
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      background:rgba(11,15,23,.92); backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--line);
-    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:14px}
+    .topbar{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
     .topbar .wrap{padding:10px 14px}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .title{font-size:16px; font-weight:700}
-    .sub{font-size:12px; color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .title{font-size:16px;font-weight:700}
+    .sub{font-size:12px;color:var(--muted)}
     .spacer{flex:1}
-    .pills{display:flex; gap:8px; flex-wrap:wrap}
-    .pill{
-      background:var(--pill); border:1px solid var(--line); color:var(--text);
-      padding:7px 10px; border-radius:999px; font-size:12px;
-      cursor:pointer; user-select:none;
-    }
-    .pill.on{background:var(--pillOn); border-color:#3a4a70}
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      margin-top:12px;
-    }
-    .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    input, select{
-      background:#0f1626; border:1px solid var(--line); color:var(--text);
-      padding:10px 10px; border-radius:12px; outline:none;
-      font-size:13px;
-    }
-    input{flex:1; min-width:220px}
-    .hint{font-size:12px; color:var(--muted); margin-top:6px}
-    .tableWrap{overflow:auto; border-radius:12px; border:1px solid var(--line); margin-top:10px}
-    table{border-collapse:separate; border-spacing:0; width:100%; min-width:900px; background:#0f1626}
-    thead th{
-      position:sticky; top:0;
-      background:#0f1626; color:#cfe0ff;
-      font-size:12px; text-align:left;
-      border-bottom:1px solid var(--line);
-      padding:10px;
-      white-space:nowrap;
-      cursor:pointer;
-    }
-    tbody td{
-      padding:10px;
-      border-bottom:1px solid rgba(36,49,74,.55);
-      font-size:12px; color:var(--text);
-      white-space:nowrap;
-    }
+    .pills{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{background:var(--pill);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none}
+    .pill.on{background:var(--pillOn);border-color:#3a4a70}
+    .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+    .card h2{margin:0 0 8px 0;font-size:14px}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input, select{background:#0f1626;border:1px solid var(--line);color:var(--text);padding:10px 10px;border-radius:12px;outline:none;font-size:13px}
+    input{flex:1;min-width:220px}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+    .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);margin-top:10px}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;background:#0f1626}
+    thead th{position:sticky;top:0;background:#0f1626;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap;cursor:pointer}
+    tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
     tbody tr:hover td{background:rgba(138,180,255,.06)}
-    .muted{color:var(--muted)}
     .num{text-align:right}
-    .pct.good{color:var(--good); font-weight:700}
-    .pct.bad{color:var(--bad); font-weight:700}
-    .badge{
-      font-size:11px; color:#cfe0ff;
-      border:1px solid var(--line);
-      padding:4px 8px; border-radius:999px;
-      background:#0f1626;
-    }
-    .footer{padding:30px 0; color:var(--muted); font-size:12px}
-    .mini{font-size:11px; color:var(--muted)}
+    .pct.good{color:var(--good);font-weight:700}
+    .pct.bad{color:var(--bad);font-weight:700}
+    .mini{font-size:11px;color:var(--muted);margin-top:8px}
   </style>
 </head>
 
@@ -92,36 +47,26 @@
       <div class="row">
         <div>
           <div class="title">매물 트래킹 대시보드</div>
-          <div class="sub" id="subtitle">CSV 로딩 중…</div>
+          <div class="sub" id="subtitle">로딩 중…</div>
         </div>
         <div class="spacer"></div>
-
         <div class="pills" aria-label="trade type">
           <div class="pill on" id="pillA1" data-type="A1">A1 (매매)</div>
           <div class="pill" id="pillB1" data-type="B1">B1 (전세)</div>
         </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div class="pills" aria-label="level tabs">
-          <div class="pill on" id="tabAll" data-tab="all">1) 전체</div>
-          <div class="pill" id="tabRegion" data-tab="region">2) 지역별</div>
-          <div class="pill" id="tabComplex" data-tab="complex">3) 단지별</div>
-        </div>
-
-        <div class="spacer"></div>
-
-        <span class="badge" id="rowCount">rows: -</span>
         <span class="badge" id="lastLoaded">loaded: -</span>
       </div>
     </div>
   </div>
 
   <div class="wrap">
-    <div class="card">
+
+    <!-- 1) 전체 -->
+    <div class="card" id="secAll">
+      <h2>1) 전체 (평형구간별 + ALL_BINS)</h2>
       <div class="controls">
-        <input id="q" placeholder="검색: 예) 성동구 / 분당구 / 옥수리버젠 / 66-98 / ALL_BINS" />
-        <select id="binFilter">
+        <input id="q_all" placeholder="검색: 예) ALL_BINS / 66-98" />
+        <select id="bin_all">
           <option value="">평형구간(전체)</option>
           <option value="<33">&lt;33</option>
           <option value="33-65">33-65</option>
@@ -131,40 +76,94 @@
           <option value=">=165">&gt;=165</option>
           <option value="ALL_BINS">ALL_BINS</option>
         </select>
-        <select id="sortKey">
+        <select id="sort_all">
           <option value="avg_change_pct">정렬: 평균가 변화율</option>
           <option value="new_premium_pct">정렬: 신규 프리미엄</option>
           <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
           <option value="curr_avg_eok">정렬: 현재 평균가</option>
           <option value="curr_cnt">정렬: 현재 매물수</option>
         </select>
-        <select id="sortDir">
+        <select id="dir_all">
           <option value="desc">내림차순</option>
           <option value="asc">오름차순</option>
         </select>
+        <span class="badge" id="cnt_all">rows: -</span>
       </div>
-      <div class="hint">
-        • 헤더 클릭으로 정렬 가능 · 숫자는 억 단위(eok) · ALL_BINS는 평형구간 전체 합산<br/>
-        • 지역 태그가 없는 단지는 집계에서 제외될 수 있어요.
-      </div>
-
-      <div class="tableWrap">
-        <table id="tbl">
-          <thead><tr id="theadRow"></tr></thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-      <div class="mini" id="meta"></div>
+      <div class="hint">• ALL_BINS는 평형구간 전체 합산</div>
+      <div class="tableWrap"><table><thead><tr id="thead_all"></tr></thead><tbody id="tbody_all"></tbody></table></div>
+      <div class="mini" id="meta_all"></div>
     </div>
 
-    <div class="footer">
-      <div>파일명 규칙(필수): reports/report_*_bins_[A1|B1]_latest.csv</div>
-      <div class="muted">GitHub Pages에서는 같은 origin의 CSV를 fetch 해야 CORS 문제가 없습니다.</div>
+    <!-- 2) 지역별 -->
+    <div class="card" id="secRegion">
+      <h2>2) 지역별 (서울시=시·구 / 경기도=도·시·구)</h2>
+      <div class="controls">
+        <input id="q_region" placeholder="검색: 예) 서울시 / 성동구 / 경기도 / 분당구 / ALL_BINS" />
+        <select id="bin_region">
+          <option value="">평형구간(전체)</option>
+          <option value="<33">&lt;33</option>
+          <option value="33-65">33-65</option>
+          <option value="66-98">66-98</option>
+          <option value="99-131">99-131</option>
+          <option value="132-164">132-164</option>
+          <option value=">=165">&gt;=165</option>
+          <option value="ALL_BINS">ALL_BINS</option>
+        </select>
+        <select id="sort_region">
+          <option value="avg_change_pct">정렬: 평균가 변화율</option>
+          <option value="new_premium_pct">정렬: 신규 프리미엄</option>
+          <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
+          <option value="curr_avg_eok">정렬: 현재 평균가</option>
+          <option value="curr_cnt">정렬: 현재 매물수</option>
+        </select>
+        <select id="dir_region">
+          <option value="desc">내림차순</option>
+          <option value="asc">오름차순</option>
+        </select>
+        <span class="badge" id="cnt_region">rows: -</span>
+      </div>
+      <div class="hint">• region3는 경기도에서만 사용(서울시는 비움)</div>
+      <div class="tableWrap"><table><thead><tr id="thead_region"></tr></thead><tbody id="tbody_region"></tbody></table></div>
+      <div class="mini" id="meta_region"></div>
     </div>
+
+    <!-- 3) 단지별 -->
+    <div class="card" id="secComplex">
+      <h2>3) 단지별</h2>
+      <div class="controls">
+        <input id="q_complex" placeholder="검색: 예) 옥수리버젠 / 100692 / 성동구 / ALL_BINS" />
+        <select id="bin_complex">
+          <option value="">평형구간(전체)</option>
+          <option value="<33">&lt;33</option>
+          <option value="33-65">33-65</option>
+          <option value="66-98">66-98</option>
+          <option value="99-131">99-131</option>
+          <option value="132-164">132-164</option>
+          <option value=">=165">&gt;=165</option>
+          <option value="ALL_BINS">ALL_BINS</option>
+        </select>
+        <select id="sort_complex">
+          <option value="avg_change_pct">정렬: 평균가 변화율</option>
+          <option value="new_premium_pct">정렬: 신규 프리미엄</option>
+          <option value="del_premium_pct">정렬: 삭제 프리미엄</option>
+          <option value="curr_avg_eok">정렬: 현재 평균가</option>
+          <option value="curr_cnt">정렬: 현재 매물수</option>
+        </select>
+        <select id="dir_complex">
+          <option value="desc">내림차순</option>
+          <option value="asc">오름차순</option>
+        </select>
+        <span class="badge" id="cnt_complex">rows: -</span>
+      </div>
+      <div class="hint">• 단지별은 행 수가 많아질 수 있어 검색을 적극 추천</div>
+      <div class="tableWrap"><table><thead><tr id="thead_complex"></tr></thead><tbody id="tbody_complex"></tbody></table></div>
+      <div class="mini" id="meta_complex"></div>
+    </div>
+
   </div>
 
 <script>
-  // ====== 설정: CSV 경로 ======
+  // 최신 CSV (same folder)
   const PATHS = {
     A1: {
       all:    "./report_all_bins_A1_latest.csv",
@@ -178,232 +177,189 @@
     }
   };
 
-  // ====== 상태 ======
-  let state = {
-    type: "A1",
-    tab: "all",
-    rows: [],
-    cols: [],
-    sort: { key: "avg_change_pct", dir: "desc" },
-  };
-
-  // ====== 유틸 ======
-  function parseCSV(text){
-    // 간단 CSV 파서(따옴표 처리 포함)
-    const lines = text.replace(/\r/g,'').split('\n').filter(x=>x.trim().length>0);
-    if (lines.length < 2) return { cols:[], rows:[] };
-    const cols = splitCSVLine(lines[0]).map(s=>s.trim());
-    const rows = [];
-    for (let i=1;i<lines.length;i++){
-      const parts = splitCSVLine(lines[i]);
-      const obj = {};
-      cols.forEach((c, idx)=> obj[c] = (parts[idx] ?? "").trim());
-      rows.push(obj);
-    }
-    return { cols, rows };
-  }
+  let state = { type:"A1" };
 
   function splitCSVLine(line){
-    const out = [];
-    let cur = "", inQ = false;
+    const out=[]; let cur=""; let inQ=false;
     for (let i=0;i<line.length;i++){
-      const ch = line[i];
+      const ch=line[i];
       if (ch === '"'){
-        if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
-        else inQ = !inQ;
-      } else if (ch === ',' && !inQ){
-        out.push(cur); cur = "";
-      } else cur += ch;
+        if (inQ && line[i+1] === '"'){ cur+='"'; i++; }
+        else inQ=!inQ;
+      } else if (ch === ',' && !inQ){ out.push(cur); cur=""; }
+      else cur+=ch;
     }
-    out.push(cur);
-    return out;
+    out.push(cur); return out;
+  }
+
+  function parseCSV(text){
+    const lines=text.replace(/\r/g,'').split('\n').filter(x=>x.trim().length>0);
+    if (lines.length<2) return {cols:[], rows:[]};
+    const cols=splitCSVLine(lines[0]).map(s=>s.trim());
+    const rows=[];
+    for (let i=1;i<lines.length;i++){
+      const parts=splitCSVLine(lines[i]);
+      const obj={};
+      cols.forEach((c,idx)=>obj[c]=(parts[idx]??"").trim());
+      rows.push(obj);
+    }
+    return {cols, rows};
   }
 
   function toNum(x){
-    if (x === null || x === undefined) return null;
-    const s = String(x).trim();
-    if (!s) return null;
-    // +0.0% 형태도 처리
+    if (x==null) return null;
+    const s=String(x).trim(); if (!s) return null;
     if (s.endsWith('%')){
-      const v = parseFloat(s.replace('%',''));
-      return Number.isFinite(v) ? v : null;
+      const v=parseFloat(s.replace('%',''));
+      return Number.isFinite(v)?v:null;
     }
-    const v = parseFloat(s);
-    return Number.isFinite(v) ? v : null;
+    const v=parseFloat(s);
+    return Number.isFinite(v)?v:null;
   }
 
   function pctClass(v){
-    if (v === null || v === undefined) return "";
-    if (v > 0) return "good";
-    if (v < 0) return "bad";
+    if (v==null) return "";
+    if (v>0) return "good";
+    if (v<0) return "bad";
     return "";
   }
 
-  function setPill(el, on){
-    el.classList.toggle("on", !!on);
-  }
+  function renderTable(sectionId, cols, rows, viewCols){
+    const thead=document.getElementById(`thead_${sectionId}`);
+    const tbody=document.getElementById(`tbody_${sectionId}`);
+    const cnt=document.getElementById(`cnt_${sectionId}`);
+    const meta=document.getElementById(`meta_${sectionId}`);
 
-  function nowStr(){
-    const d = new Date();
-    const z = (n)=> String(n).padStart(2,'0');
-    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
-  }
-
-  // ====== 렌더 ======
-  function renderTable(rows, cols){
-    const thead = document.getElementById("theadRow");
-    const tbody = document.getElementById("tbody");
-
-    // 컬럼 세트: 탭별로 보기 좋게 고정
-    const tab = state.tab;
-    let viewCols = [];
-    if (tab === "all"){
-      viewCols = ["spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
-    } else if (tab === "region"){
-      viewCols = ["region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
-    } else {
-      viewCols = ["hscpNo","complex_name","region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
-    }
-
-    // 실제 존재하는 컬럼만
     viewCols = viewCols.filter(c => cols.includes(c));
 
-    // 헤더
-    thead.innerHTML = "";
+    thead.innerHTML="";
     viewCols.forEach(c=>{
-      const th = document.createElement("th");
-      th.textContent = c;
-      th.onclick = ()=> {
-        const same = (state.sort.key === c);
-        state.sort.key = c;
-        state.sort.dir = same ? (state.sort.dir === "desc" ? "asc" : "desc") : "desc";
-        document.getElementById("sortKey").value = state.sort.key;
-        document.getElementById("sortDir").value = state.sort.dir;
-        applyFilters();
+      const th=document.createElement("th");
+      th.textContent=c;
+      th.onclick=()=> { // header sort sync
+        document.getElementById(`sort_${sectionId}`).value = c;
+        // toggle dir
+        const dirEl=document.getElementById(`dir_${sectionId}`);
+        dirEl.value = (dirEl.value === "desc") ? "asc" : "desc";
+        applySection(sectionId, cols, rows, viewCols);
       };
       thead.appendChild(th);
     });
 
-    // 바디
-    tbody.innerHTML = "";
+    tbody.innerHTML="";
     rows.forEach(r=>{
-      const tr = document.createElement("tr");
+      const tr=document.createElement("tr");
       viewCols.forEach(c=>{
-        const td = document.createElement("td");
-        const val = r[c] ?? "";
-        const n = toNum(val);
-
-        const isNumCol = ["prev_cnt","curr_cnt","new_cnt","del_cnt","prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok","avg_change_pct","new_premium_pct","del_premium_pct"].includes(c);
-        if (isNumCol) td.classList.add("num");
-
+        const td=document.createElement("td");
+        const val=r[c] ?? "";
+        const isNum = ["prev_cnt","curr_cnt","new_cnt","del_cnt","prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok","avg_change_pct","new_premium_pct","del_premium_pct"].includes(c);
+        if (isNum) td.classList.add("num");
         if (String(val).endsWith('%')){
           td.classList.add("pct");
-          td.classList.add(pctClass(n));
+          td.classList.add(pctClass(toNum(val)));
         }
-
-        td.textContent = val;
+        td.textContent=val;
         tr.appendChild(td);
       });
       tbody.appendChild(tr);
     });
 
-    document.getElementById("rowCount").textContent = `rows: ${rows.length}`;
+    cnt.textContent=`rows: ${rows.length}`;
+    meta.textContent=`columns: ${cols.join(", ")}`;
   }
 
-  function applyFilters(){
-    const q = document.getElementById("q").value.trim().toLowerCase();
-    const bin = document.getElementById("binFilter").value;
-    const sortKey = document.getElementById("sortKey").value;
-    const sortDir = document.getElementById("sortDir").value;
-    state.sort = { key: sortKey, dir: sortDir };
+  function applySection(sectionId, cols, baseRows, viewCols){
+    const q=document.getElementById(`q_${sectionId}`).value.trim().toLowerCase();
+    const bin=document.getElementById(`bin_${sectionId}`).value;
+    const sortKey=document.getElementById(`sort_${sectionId}`).value;
+    const dir=document.getElementById(`dir_${sectionId}`).value;
 
-    let out = state.rows.slice();
+    let out=baseRows.slice();
+    if (bin) out = out.filter(r => String(r.spc_bin||"") === bin);
+    if (q) out = out.filter(r => JSON.stringify(r).toLowerCase().includes(q));
 
-    if (bin){
-      out = out.filter(r => String(r.spc_bin||"") === bin);
-    }
-    if (q){
-      out = out.filter(r => JSON.stringify(r).toLowerCase().includes(q));
-    }
-
-    // sort
     out.sort((a,b)=>{
-      const ka = a[sortKey], kb = b[sortKey];
-      const na = toNum(ka), nb = toNum(kb);
-
-      let cmp = 0;
-      if (na !== null && nb !== null){
-        cmp = na - nb;
-      } else {
-        cmp = String(ka||"").localeCompare(String(kb||""), "ko");
-      }
-      return (sortDir === "asc") ? cmp : -cmp;
+      const na=toNum(a[sortKey]), nb=toNum(b[sortKey]);
+      let cmp=0;
+      if (na!=null && nb!=null) cmp = na - nb;
+      else cmp = String(a[sortKey]||"").localeCompare(String(b[sortKey]||""), "ko");
+      return (dir==="asc") ? cmp : -cmp;
     });
 
-    renderTable(out, state.cols);
+    renderTable(sectionId, cols, out, viewCols);
   }
 
-  async function load(){
-    const url = PATHS[state.type][state.tab] + `?v=${Date.now()}`; // cache bust
-    const subtitle = document.getElementById("subtitle");
-    subtitle.textContent = `로딩: ${url}`;
+  async function loadOne(kind){
+    const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${kind}: ${res.status} ${res.statusText}`);
+    const text = await res.text();
+    return parseCSV(text);
+  }
+
+  async function loadAll(){
+    const subtitle=document.getElementById("subtitle");
+    subtitle.textContent = `로딩 중… (${state.type})`;
 
     try{
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const text = await res.text();
-      const parsed = parseCSV(text);
+      const [all, region, complex] = await Promise.all([
+        loadOne("all"),
+        loadOne("region"),
+        loadOne("complex"),
+      ]);
 
-      state.cols = parsed.cols;
-      state.rows = parsed.rows;
+      // view columns
+      const vc_all = ["spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
+      const vc_region = ["region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
+      const vc_complex = ["hscpNo","complex_name","region1","region2","region3","spc_bin","prev_cnt","prev_avg_eok","curr_cnt","curr_avg_eok","avg_change_pct","new_cnt","new_avg_eok","new_premium_pct","del_cnt","del_avg_eok","del_premium_pct"];
 
-      document.getElementById("lastLoaded").textContent = `loaded: ${nowStr()}`;
-      subtitle.textContent = `${state.type} · ${state.tab.toUpperCase()} · ${url}`;
+      // store base rows on DOM (simple)
+      window.__DATA__ = { all, region, complex };
 
-      // controls sync
-      document.getElementById("sortKey").value = state.sort.key;
-      document.getElementById("sortDir").value = state.sort.dir;
+      // initial render (apply filters/sort)
+      applySection("all", all.cols, all.rows, vc_all);
+      applySection("region", region.cols, region.rows, vc_region);
+      applySection("complex", complex.cols, complex.rows, vc_complex);
 
-      applyFilters();
-      document.getElementById("meta").textContent = `columns: ${state.cols.join(", ")}`;
+      document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toISOString().slice(0,19).replace('T',' ')}`;
+      subtitle.textContent = `${state.type} · 전체/지역/단지 3종 표 표시`;
+
+      // bind inputs (once)
+      bindSection("all", all.cols, all.rows, vc_all);
+      bindSection("region", region.cols, region.rows, vc_region);
+      bindSection("complex", complex.cols, complex.rows, vc_complex);
+
     }catch(e){
       subtitle.textContent = `로딩 실패: ${e.message}`;
-      state.cols = [];
-      state.rows = [];
-      renderTable([], []);
-      document.getElementById("meta").textContent =
-        "CSV 파일이 reports/ 폴더에 존재하는지 확인해줘: report_all_bins_[A1|B1]_latest.csv 등";
+      console.error(e);
     }
   }
 
-  // ====== 이벤트 ======
-  function setType(t){
-    state.type = t;
-    setPill(document.getElementById("pillA1"), t==="A1");
-    setPill(document.getElementById("pillB1"), t==="B1");
-    load();
+  function bindSection(sectionId, cols, rows, viewCols){
+    const q=document.getElementById(`q_${sectionId}`);
+    const bin=document.getElementById(`bin_${sectionId}`);
+    const sort=document.getElementById(`sort_${sectionId}`);
+    const dir=document.getElementById(`dir_${sectionId}`);
+    const handler = ()=> applySection(sectionId, cols, rows, viewCols);
+
+    // remove+add to avoid multiple listeners on reload
+    q.oninput = handler;
+    bin.onchange = handler;
+    sort.onchange = handler;
+    dir.onchange = handler;
   }
-  function setTab(tab){
-    state.tab = tab;
-    setPill(document.getElementById("tabAll"), tab==="all");
-    setPill(document.getElementById("tabRegion"), tab==="region");
-    setPill(document.getElementById("tabComplex"), tab==="complex");
-    load();
+
+  function setType(t){
+    state.type=t;
+    document.getElementById("pillA1").classList.toggle("on", t==="A1");
+    document.getElementById("pillB1").classList.toggle("on", t==="B1");
+    loadAll();
   }
 
   document.getElementById("pillA1").onclick = ()=> setType("A1");
   document.getElementById("pillB1").onclick = ()=> setType("B1");
-  document.getElementById("tabAll").onclick = ()=> setTab("all");
-  document.getElementById("tabRegion").onclick = ()=> setTab("region");
-  document.getElementById("tabComplex").onclick = ()=> setTab("complex");
 
-  document.getElementById("q").addEventListener("input", ()=> applyFilters());
-  document.getElementById("binFilter").addEventListener("change", ()=> applyFilters());
-  document.getElementById("sortKey").addEventListener("change", ()=> applyFilters());
-  document.getElementById("sortDir").addEventListener("change", ()=> applyFilters());
-
-  // init
-  load();
+  loadAll();
 </script>
 </body>
 </html>
