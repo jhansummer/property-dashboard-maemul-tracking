@@ -249,7 +249,7 @@
 
     cols.forEach(c => {
       const th = document.createElement("th");
-      th.textContent = c;
+      th.textContent = COL_LABELS[c] || c;  // 🔥 여기서 한글 치환
       thead.appendChild(th);
     });
 
