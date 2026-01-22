@@ -8,7 +8,7 @@
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
       --line:#24314a; --pill:#1a2640; --pillOn:#2a3a5f;
-      --good:#66e3a6; --bad:#ff7b7b;
+      --good:#66e3a6; --bad:#ff7b7b; --warn:#ffd166;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
@@ -21,21 +21,22 @@
     .spacer{flex:1}
     .pills{display:flex;gap:8px;flex-wrap:wrap}
     .pill{background:var(--pill);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none}
-    .pill.on{background:var(--pillOn);border-color:#3a4a70; font-weight: bold;}
+    .pill.on{background:var(--pillOn);border-color:#3a4a70;font-weight:bold}
     .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
-    .card h2{margin:0 0 10px 0;font-size:15px; color:#fff;}
+    .card h2{margin:0 0 10px 0;font-size:15px;color:#fff}
     .hint{font-size:12px;color:var(--muted);margin-bottom:10px}
     .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626}
-    table{border-collapse:separate;border-spacing:0;width:100%; min-width:max-content;}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
     thead th{position:sticky;top:0;background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap}
     tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
     tbody tr:hover td{background:rgba(138,180,255,.06)}
-    .num{text-align:right; font-variant-numeric: tabular-nums;}
+    .num{text-align:right;font-variant-numeric:tabular-nums}
     .pct.good{color:var(--good);font-weight:700}
     .pct.bad{color:var(--bad);font-weight:700}
     .mini{font-size:11px;color:var(--muted);margin-top:8px}
-    .loading-row td { text-align: center; padding: 40px; color: var(--muted); }
+    .loading-row td{text-align:center;padding:40px;color:var(--muted)}
+    .warn{margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);font-size:12px;white-space:pre-wrap}
   </style>
 </head>
 
@@ -58,6 +59,7 @@
   </div>
 
   <div class="wrap">
+
     <div class="card">
       <h2>1) 전체 통계</h2>
       <div class="hint">• 면적 구간별 통합 데이터</div>
@@ -69,6 +71,7 @@
       </div>
       <div class="mini" id="meta_all"></div>
       <span class="badge" id="cnt_all">rows: -</span>
+      <div class="warn" id="warn_all" style="display:none"></div>
     </div>
 
     <div class="card">
@@ -82,6 +85,7 @@
       </div>
       <div class="mini" id="meta_region"></div>
       <span class="badge" id="cnt_region">rows: -</span>
+      <div class="warn" id="warn_region" style="display:none"></div>
     </div>
 
     <div class="card">
@@ -95,7 +99,9 @@
       </div>
       <div class="mini" id="meta_complex"></div>
       <span class="badge" id="cnt_complex">rows: -</span>
+      <div class="warn" id="warn_complex" style="display:none"></div>
     </div>
+
   </div>
 
 <script>
@@ -114,43 +120,72 @@
 
   let state = { type:"A1" };
 
-  function splitCSVLine(line){
-    const out=[]; let cur=""; let inQ=false;
-    for (let i=0;i<line.length;i++){
-      const ch=line[i];
-      if (ch === '"'){
-        if (inQ && line[i+1] === '"'){ cur+='"'; i++; }
-        else inQ=!inQ;
-      } else if (ch === ',' && !inQ){ out.push(cur); cur=""; }
-      else cur+=ch;
-    }
-    out.push(cur); return out;
-  }
-
+  // Robust CSV parser: handles commas/quotes/newlines-inside-quotes correctly.
   function parseCSV(text){
+    if (!text) return {cols:[], rows:[], error:"empty response"};
     // UTF-8 BOM 제거
-    const cleanText = text.replace(/^\ufeff/, '');
-    const lines = cleanText.replace(/\r/g,'').split('\n').filter(x => x.trim().length > 0);
-    if (lines.length < 2) return {cols:[], rows:[]};
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
 
-    const cols = splitCSVLine(lines[0]).map(s => s.trim());
     const rows = [];
-    for (let i = 1; i < lines.length; i++){
-      const parts = splitCSVLine(lines[i]);
-      const obj = {};
-      cols.forEach((c, idx) => {
-        obj[c] = (parts[idx] !== undefined) ? parts[idx].trim() : "";
-      });
-      rows.push(obj);
+    let row = [];
+    let cell = "";
+    let inQ = false;
+
+    for (let i=0;i<text.length;i++){
+      const ch = text[i];
+
+      if (ch === '"'){
+        if (inQ && text[i+1] === '"'){ cell += '"'; i++; }
+        else inQ = !inQ;
+        continue;
+      }
+
+      if (!inQ && ch === ','){
+        row.push(cell);
+        cell = "";
+        continue;
+      }
+
+      if (!inQ && ch === '\n'){
+        row.push(cell);
+        cell = "";
+        rows.push(row);
+        row = [];
+        continue;
+      }
+
+      if (ch === '\r') continue;
+      cell += ch;
     }
-    return {cols, rows};
+
+    // 마지막 행 처리
+    if (cell.length || row.length){
+      row.push(cell);
+      rows.push(row);
+    }
+
+    // 빈 줄 제거
+    const cleaned = rows.filter(r => r.some(c => String(c).trim().length > 0));
+    if (cleaned.length < 2) return {cols:[], rows:[], error:`lines<2 (${cleaned.length})`};
+
+    const cols = cleaned[0].map(s => String(s).trim());
+    if (!cols.length || cols.every(c => !c)) return {cols:[], rows:[], error:"header empty"};
+
+    const out = [];
+    for (let i=1;i<cleaned.length;i++){
+      const parts = cleaned[i];
+      const obj = {};
+      cols.forEach((c, idx) => obj[c] = (parts[idx] ?? "").toString().trim());
+      out.push(obj);
+    }
+    return {cols, rows: out};
   }
 
   function toNum(x){
     if (x == null) return null;
-    let s = String(x).trim(); 
+    let s = String(x).trim();
     if (!s || s === "-") return null;
-    if (s.endsWith('%')) s = s.replace('%','');
+    if (s.endsWith('%')) s = s.slice(0, -1);
     const v = parseFloat(s);
     return Number.isFinite(v) ? v : null;
   }
@@ -168,6 +203,17 @@
     "avg_change_pct","new_premium_pct","del_premium_pct"
   ]);
 
+  function showWarn(sectionId, msg){
+    const el = document.getElementById(`warn_${sectionId}`);
+    el.style.display = "block";
+    el.textContent = msg;
+  }
+  function hideWarn(sectionId){
+    const el = document.getElementById(`warn_${sectionId}`);
+    el.style.display = "none";
+    el.textContent = "";
+  }
+
   function render(sectionId, cols, rows){
     const thead = document.getElementById(`thead_${sectionId}`);
     const tbody = document.getElementById(`tbody_${sectionId}`);
@@ -175,8 +221,12 @@
     const cnt = document.getElementById(`cnt_${sectionId}`);
 
     thead.innerHTML = "";
-    if (cols.length === 0) {
+    tbody.innerHTML = "";
+
+    if (!cols || cols.length === 0){
       tbody.innerHTML = "<tr><td colspan='100' style='text-align:center; padding:20px;'>데이터가 없습니다.</td></tr>";
+      cnt.textContent = "rows: -";
+      meta.textContent = "";
       return;
     }
 
@@ -186,7 +236,6 @@
       thead.appendChild(th);
     });
 
-    tbody.innerHTML = "";
     rows.forEach(r => {
       const tr = document.createElement("tr");
       cols.forEach(c => {
@@ -204,28 +253,45 @@
     });
 
     cnt.textContent = `rows: ${rows.length}`;
-    meta.textContent = `columns: ${cols.join(", ")}`;
+    meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
   }
 
   async function loadOne(kind){
     const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
     try {
       const res = await fetch(url);
-      if (!res.ok) return {cols:[], rows:[], error: `${res.status}`};
       const text = await res.text();
-      return parseCSV(text);
+
+      if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status}`};
+
+      // HTML이 오면(404 페이지 등) 바로 감지
+      const head = text.slice(0, 80).trim().toLowerCase();
+      if (head.startsWith("<!doctype html") || head.startsWith("<html")) {
+        return {cols:[], rows:[], error: `${kind}: got HTML not CSV`};
+      }
+
+      const parsed = parseCSV(text);
+      if (!parsed.cols.length){
+        return {cols:[], rows:[], error: `${kind}: parse cols=0 (${parsed.error||"unknown"})`};
+      }
+      return parsed;
+
     } catch (e) {
-      return {cols:[], rows:[], error: e.message};
+      return {cols:[], rows:[], error: `${kind}: ${e.message}`};
     }
   }
 
   async function loadAll(){
     const subtitle = document.getElementById("subtitle");
     subtitle.textContent = `${state.type} 데이터를 불러오는 중...`;
-    
+
     // 로딩 표시
     ["all", "region", "complex"].forEach(id => {
+      hideWarn(id);
       document.getElementById(`tbody_${id}`).innerHTML = "<tr class='loading-row'><td colspan='100'>데이터 로딩 중...</td></tr>";
+      document.getElementById(`thead_${id}`).innerHTML = "";
+      document.getElementById(`cnt_${id}`).textContent = "rows: -";
+      document.getElementById(`meta_${id}`).textContent = "";
     });
 
     const [all, region, complex] = await Promise.all([
@@ -238,9 +304,12 @@
     render("region", region.cols, region.rows);
     render("complex", complex.cols, complex.rows);
 
-    const errors = [all, region, complex].filter(x => x.error).map(x => x.error);
+    const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
     if (errors.length > 0) {
-      subtitle.textContent = `일부 로딩 실패: ${errors.join(", ")}`;
+      subtitle.textContent = `일부 로딩 실패: ${errors.join(" | ")}`;
+      if (all.error) showWarn("all", all.error);
+      if (region.error) showWarn("region", region.error);
+      if (complex.error) showWarn("complex", complex.error);
     } else {
       document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toLocaleTimeString()}`;
       subtitle.textContent = `${state.type} · 모든 데이터가 정상적으로 표시됩니다.`;
