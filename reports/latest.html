@@ -237,7 +237,8 @@
         if (NUM_COLS.has(c)) td.classList.add("num");
         if (String(val).includes('%')){
           td.classList.add("pct");
-          td.classList.add(pctClass(toNum(val)));
+          const cls = pctClass(toNum(val));
+          if (cls) td.classList.add(cls);
         }
         td.textContent = val;
         tr.appendChild(td);
