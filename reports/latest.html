@@ -76,7 +76,7 @@
 
     <div class="card">
       <h2>2) 지역별 상세</h2>
-      <div class="hint">• 지역(구/동) 및 면적 구간별 데이터 (가로 스크롤 가능)</div>
+      <div class="hint">• 지역 및 면적 구간별 데이터</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_region"></tr></thead>
@@ -90,7 +90,7 @@
 
     <div class="card">
       <h2>3) 단지별 상세</h2>
-      <div class="hint">• 주요 단지별 상세 데이터 (가로 스크롤 가능)</div>
+      <div class="hint">• 주요 단지별 상세 데이터</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -105,6 +105,19 @@
   </div>
 
 <script>
+  // ---- Global error reporting (mobile-friendly) ----
+  function setSubtitle(msg){
+    const el = document.getElementById("subtitle");
+    if (el) el.textContent = msg;
+  }
+  window.onerror = function(message, source, lineno, colno){
+    setSubtitle(`JS 오류: ${message} @${lineno}:${colno}`);
+  };
+  window.onunhandledrejection = function(ev){
+    const m = (ev && ev.reason) ? (ev.reason.message || String(ev.reason)) : "unknown";
+    setSubtitle(`Promise 오류: ${m}`);
+  };
+
   const PATHS = {
     A1: {
       all:    "./report_all_bins_A1_latest.csv",
@@ -120,10 +133,9 @@
 
   let state = { type:"A1" };
 
-  // Robust CSV parser: handles commas/quotes/newlines-inside-quotes correctly.
+  // Robust CSV parser (commas/quotes/newlines-in-quotes OK)
   function parseCSV(text){
     if (!text) return {cols:[], rows:[], error:"empty response"};
-    // UTF-8 BOM 제거
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
 
     const rows = [];
@@ -140,31 +152,13 @@
         continue;
       }
 
-      if (!inQ && ch === ','){
-        row.push(cell);
-        cell = "";
-        continue;
-      }
-
-      if (!inQ && ch === '\n'){
-        row.push(cell);
-        cell = "";
-        rows.push(row);
-        row = [];
-        continue;
-      }
-
+      if (!inQ && ch === ','){ row.push(cell); cell=""; continue; }
+      if (!inQ && ch === '\n'){ row.push(cell); cell=""; rows.push(row); row=[]; continue; }
       if (ch === '\r') continue;
       cell += ch;
     }
+    if (cell.length || row.length){ row.push(cell); rows.push(row); }
 
-    // 마지막 행 처리
-    if (cell.length || row.length){
-      row.push(cell);
-      rows.push(row);
-    }
-
-    // 빈 줄 제거
     const cleaned = rows.filter(r => r.some(c => String(c).trim().length > 0));
     if (cleaned.length < 2) return {cols:[], rows:[], error:`lines<2 (${cleaned.length})`};
 
@@ -189,7 +183,6 @@
     const v = parseFloat(s);
     return Number.isFinite(v) ? v : null;
   }
-
   function pctClass(v){
     if (v == null) return "";
     if (v > 0) return "good";
@@ -256,15 +249,26 @@
     meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
   }
 
+  // fetch with timeout to prevent infinite loading
+  async function fetchTextWithTimeout(url, ms=10000){
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), ms);
+    try{
+      const res = await fetch(url, { signal: controller.signal });
+      const text = await res.text();
+      return { res, text };
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
   async function loadOne(kind){
     const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
     try {
-      const res = await fetch(url);
-      const text = await res.text();
+      const { res, text } = await fetchTextWithTimeout(url, 10000);
 
       if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status}`};
 
-      // HTML이 오면(404 페이지 등) 바로 감지
       const head = text.slice(0, 80).trim().toLowerCase();
       if (head.startsWith("<!doctype html") || head.startsWith("<html")) {
         return {cols:[], rows:[], error: `${kind}: got HTML not CSV`};
@@ -277,16 +281,15 @@
       return parsed;
 
     } catch (e) {
-      return {cols:[], rows:[], error: `${kind}: ${e.message}`};
+      const msg = (e && e.name === "AbortError") ? "timeout(10s)" : (e.message || String(e));
+      return {cols:[], rows:[], error: `${kind}: ${msg}`};
     }
   }
 
   async function loadAll(){
-    const subtitle = document.getElementById("subtitle");
-    subtitle.textContent = `${state.type} 데이터를 불러오는 중...`;
+    setSubtitle(`${state.type} 데이터를 불러오는 중...`);
 
-    // 로딩 표시
-    ["all", "region", "complex"].forEach(id => {
+    ["all","region","complex"].forEach(id => {
       hideWarn(id);
       document.getElementById(`tbody_${id}`).innerHTML = "<tr class='loading-row'><td colspan='100'>데이터 로딩 중...</td></tr>";
       document.getElementById(`thead_${id}`).innerHTML = "";
@@ -294,11 +297,15 @@
       document.getElementById(`meta_${id}`).textContent = "";
     });
 
-    const [all, region, complex] = await Promise.all([
+    // one failure shouldn't block the rest
+    const results = await Promise.allSettled([
       loadOne("all"),
       loadOne("region"),
       loadOne("complex"),
     ]);
+    const all    = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
+    const region = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
+    const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
 
     render("all", all.cols, all.rows);
     render("region", region.cols, region.rows);
@@ -306,13 +313,13 @@
 
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
     if (errors.length > 0) {
-      subtitle.textContent = `일부 로딩 실패: ${errors.join(" | ")}`;
+      setSubtitle(`일부 로딩 실패: ${errors.join(" | ")}`);
       if (all.error) showWarn("all", all.error);
       if (region.error) showWarn("region", region.error);
       if (complex.error) showWarn("complex", complex.error);
     } else {
       document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toLocaleTimeString()}`;
-      subtitle.textContent = `${state.type} · 모든 데이터가 정상적으로 표시됩니다.`;
+      setSubtitle(`${state.type} · 모든 데이터가 정상적으로 표시됩니다.`);
     }
   }
 
@@ -324,7 +331,6 @@
     loadAll();
   }
 
-  // 초기 실행
   window.onload = loadAll;
 </script>
 </body>
