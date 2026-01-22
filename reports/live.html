@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>매물 트래킹 대시보드 (Latest)</title>
+  <style>
+    :root{
+      --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
+      --line:#24314a; --pill:#1a2640; --pillOn:#2a3a5f;
+      --good:#66e3a6; --bad:#ff7b7b; --warn:#ffd166;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1400px;margin:0 auto;padding:14px}
+    .topbar{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    .topbar .wrap{padding:10px 14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .title{font-size:16px;font-weight:700}
+    .sub{font-size:12px;color:var(--muted)}
+    .spacer{flex:1}
+    .pills{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{background:var(--pill);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none}
+    .pill.on{background:var(--pillOn);border-color:#3a4a70;font-weight:bold}
+    .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
+    .card h2{margin:0 0 10px 0;font-size:15px;color:#fff}
+    .hint{font-size:12px;color:var(--muted);margin-bottom:10px}
+    .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
+    thead th{position:sticky;top:0;background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap}
+    tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
+    tbody tr:hover td{background:rgba(138,180,255,.06)}
+    .num{text-align:right;font-variant-numeric:tabular-nums}
+    .pct.good{color:var(--good);font-weight:700}
+    .pct.bad{color:var(--bad);font-weight:700}
+    .mini{font-size:11px;color:var(--muted);margin-top:8px}
+    .loading-row td{text-align:center;padding:40px;color:var(--muted)}
+    .warn{margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);font-size:12px;white-space:pre-wrap}
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="row">
+        <div>
+          <div class="title">매물 트래킹 대시보드</div>
+          <div class="sub" id="subtitle">데이터를 불러오는 중...</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="pills" aria-label="trade type">
+          <div class="pill on" id="pillA1" onclick="setType('A1')">A1 (매매)</div>
+          <div class="pill" id="pillB1" onclick="setType('B1')">B1 (전세)</div>
+        </div>
+        <span class="badge" id="lastLoaded">loaded: -</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="card">
+      <h2>1) 전체 통계</h2>
+      <div class="hint">• 면적 구간별 통합 데이터</div>
+      <div class="tableWrap">
+        <table>
+          <thead><tr id="thead_all"></tr></thead>
+          <tbody id="tbody_all"></tbody>
+        </table>
+      </div>
+      <div class="mini" id="meta_all"></div>
+      <span class="badge" id="cnt_all">rows: -</span>
+      <div class="warn" id="warn_all" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <h2>2) 지역별 상세</h2>
+      <div class="hint">• 지역 및 면적 구간별 데이터</div>
+      <div class="tableWrap">
+        <table>
+          <thead><tr id="thead_region"></tr></thead>
+          <tbody id="tbody_region"></tbody>
+        </table>
+      </div>
+      <div class="mini" id="meta_region"></div>
+      <span class="badge" id="cnt_region">rows: -</span>
+      <div class="warn" id="warn_region" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <h2>3) 단지별 상세</h2>
+      <div class="hint">• 주요 단지별 상세 데이터</div>
+      <div class="tableWrap">
+        <table>
+          <thead><tr id="thead_complex"></tr></thead>
+          <tbody id="tbody_complex"></tbody>
+        </table>
+      </div>
+      <div class="mini" id="meta_complex"></div>
+      <span class="badge" id="cnt_complex">rows: -</span>
+      <div class="warn" id="warn_complex" style="display:none"></div>
+    </div>
+
+  </div>
+
+<script>
+  // ---- Global error reporting (mobile-friendly) ----
+  function setSubtitle(msg){
+    const el = document.getElementById("subtitle");
+    if (el) el.textContent = msg;
+  }
+  window.onerror = function(message, source, lineno, colno){
+    setSubtitle(`JS 오류: ${message} @${lineno}:${colno}`);
+  };
+  window.onunhandledrejection = function(ev){
+    const m = (ev && ev.reason) ? (ev.reason.message || String(ev.reason)) : "unknown";
+    setSubtitle(`Promise 오류: ${m}`);
+  };
+
+  const PATHS = {
+    A1: {
+      all:    "./report_all_bins_A1_latest.csv",
+      region: "./report_region_bins_A1_latest.csv",
+      complex:"./report_complex_bins_A1_latest.csv",
+    },
+    B1: {
+      all:    "./report_all_bins_B1_latest.csv",
+      region: "./report_region_bins_B1_latest.csv",
+      complex:"./report_complex_bins_B1_latest.csv",
+    }
+  };
+
+  let state = { type:"A1" };
+
+  // Robust CSV parser (commas/quotes/newlines-in-quotes OK)
+  function parseCSV(text){
+    if (!text) return {cols:[], rows:[], error:"empty response"};
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let inQ = false;
+
+    for (let i=0;i<text.length;i++){
+      const ch = text[i];
+
+      if (ch === '"'){
+        if (inQ && text[i+1] === '"'){ cell += '"'; i++; }
+        else inQ = !inQ;
+        continue;
+      }
+
+      if (!inQ && ch === ','){ row.push(cell); cell=""; continue; }
+      if (!inQ && ch === '\n'){ row.push(cell); cell=""; rows.push(row); row=[]; continue; }
+      if (ch === '\r') continue;
+      cell += ch;
+    }
+    if (cell.length || row.length){ row.push(cell); rows.push(row); }
+
+    const cleaned = rows.filter(r => r.some(c => String(c).trim().length > 0));
+    if (cleaned.length < 2) return {cols:[], rows:[], error:`lines<2 (${cleaned.length})`};
+
+    const cols = cleaned[0].map(s => String(s).trim());
+    if (!cols.length || cols.every(c => !c)) return {cols:[], rows:[], error:"header empty"};
+
+    const out = [];
+    for (let i=1;i<cleaned.length;i++){
+      const parts = cleaned[i];
+      const obj = {};
+      cols.forEach((c, idx) => obj[c] = (parts[idx] ?? "").toString().trim());
+      out.push(obj);
+    }
+    return {cols, rows: out};
+  }
+
+  function toNum(x){
+    if (x == null) return null;
+    let s = String(x).trim();
+    if (!s || s === "-") return null;
+    if (s.endsWith('%')) s = s.slice(0, -1);
+    const v = parseFloat(s);
+    return Number.isFinite(v) ? v : null;
+  }
+  function pctClass(v){
+    if (v == null) return "";
+    if (v > 0) return "good";
+    if (v < 0) return "bad";
+    return "";
+  }
+
+  const NUM_COLS = new Set([
+    "prev_cnt","curr_cnt","new_cnt","del_cnt",
+    "prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok",
+    "avg_change_pct","new_premium_pct","del_premium_pct"
+  ]);
+
+  function showWarn(sectionId, msg){
+    const el = document.getElementById(`warn_${sectionId}`);
+    el.style.display = "block";
+    el.textContent = msg;
+  }
+  function hideWarn(sectionId){
+    const el = document.getElementById(`warn_${sectionId}`);
+    el.style.display = "none";
+    el.textContent = "";
+  }
+
+  function render(sectionId, cols, rows){
+    const thead = document.getElementById(`thead_${sectionId}`);
+    const tbody = document.getElementById(`tbody_${sectionId}`);
+    const meta = document.getElementById(`meta_${sectionId}`);
+    const cnt = document.getElementById(`cnt_${sectionId}`);
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    if (!cols || cols.length === 0){
+      tbody.innerHTML = "<tr><td colspan='100' style='text-align:center; padding:20px;'>데이터가 없습니다.</td></tr>";
+      cnt.textContent = "rows: -";
+      meta.textContent = "";
+      return;
+    }
+
+    cols.forEach(c => {
+      const th = document.createElement("th");
+      th.textContent = c;
+      thead.appendChild(th);
+    });
+
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      cols.forEach(c => {
+        const td = document.createElement("td");
+        const val = r[c] ?? "";
+        if (NUM_COLS.has(c)) td.classList.add("num");
+        if (String(val).includes('%')){
+          td.classList.add("pct");
+          const cls = pctClass(toNum(val));
+          if (cls) td.classList.add(cls);
+        }
+        td.textContent = val;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    cnt.textContent = `rows: ${rows.length}`;
+    meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
+  }
+
+  // fetch with timeout to prevent infinite loading
+  async function fetchTextWithTimeout(url, ms=10000){
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), ms);
+    try{
+      const res = await fetch(url, { signal: controller.signal });
+      const text = await res.text();
+      return { res, text };
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  async function loadOne(kind){
+    const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
+    try {
+      const { res, text } = await fetchTextWithTimeout(url, 10000);
+
+      if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status}`};
+
+      const head = text.slice(0, 80).trim().toLowerCase();
+      if (head.startsWith("<!doctype html") || head.startsWith("<html")) {
+        return {cols:[], rows:[], error: `${kind}: got HTML not CSV`};
+      }
+
+      const parsed = parseCSV(text);
+      if (!parsed.cols.length){
+        return {cols:[], rows:[], error: `${kind}: parse cols=0 (${parsed.error||"unknown"})`};
+      }
+      return parsed;
+
+    } catch (e) {
+      const msg = (e && e.name === "AbortError") ? "timeout(10s)" : (e.message || String(e));
+      return {cols:[], rows:[], error: `${kind}: ${msg}`};
+    }
+  }
+
+  async function loadAll(){
+    setSubtitle(`${state.type} 데이터를 불러오는 중...`);
+
+    ["all","region","complex"].forEach(id => {
+      hideWarn(id);
+      document.getElementById(`tbody_${id}`).innerHTML = "<tr class='loading-row'><td colspan='100'>데이터 로딩 중...</td></tr>";
+      document.getElementById(`thead_${id}`).innerHTML = "";
+      document.getElementById(`cnt_${id}`).textContent = "rows: -";
+      document.getElementById(`meta_${id}`).textContent = "";
+    });
+
+    // one failure shouldn't block the rest
+    const results = await Promise.allSettled([
+      loadOne("all"),
+      loadOne("region"),
+      loadOne("complex"),
+    ]);
+    const all    = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
+    const region = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
+    const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
+
+    render("all", all.cols, all.rows);
+    render("region", region.cols, region.rows);
+    render("complex", complex.cols, complex.rows);
+
+    const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
+    if (errors.length > 0) {
+      setSubtitle(`일부 로딩 실패: ${errors.join(" | ")}`);
+      if (all.error) showWarn("all", all.error);
+      if (region.error) showWarn("region", region.error);
+      if (complex.error) showWarn("complex", complex.error);
+    } else {
+      document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toLocaleTimeString()}`;
+      setSubtitle(`${state.type} · 모든 데이터가 정상적으로 표시됩니다.`);
+    }
+  }
+
+  function setType(t){
+    if (state.type === t) return;
+    state.type = t;
+    document.getElementById("pillA1").classList.toggle("on", t === "A1");
+    document.getElementById("pillB1").classList.toggle("on", t === "B1");
+    loadAll();
+  }
+
+  window.onload = loadAll;
+</script>
+</body>
+</html>
