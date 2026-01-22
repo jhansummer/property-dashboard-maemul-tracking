@@ -105,6 +105,30 @@
   </div>
 
 <script>
+    /* =========================
+     화면 표시용 컬럼명 매핑
+     ========================= */
+  const COL_LABELS = {
+    level: "구분",
+    group: "집계",
+    spc_bin: "평형구간",
+
+    prev_cnt: "이전 매물수",
+    prev_avg_eok: "이전 평균가(억)",
+
+    curr_cnt: "현재 매물수",
+    curr_avg_eok: "현재 평균가(억)",
+
+    avg_change_pct: "평균가 변화율",
+
+    new_cnt: "신규 매물수",
+    new_avg_eok: "신규 평균가(억)",
+    new_premium_pct: "신규 프리미엄",
+
+    del_cnt: "삭제 매물수",
+    del_avg_eok: "삭제 평균가(억)",
+    del_premium_pct: "삭제 프리미엄"
+  };
   // ---- Global error reporting (mobile-friendly) ----
   function setSubtitle(msg){
     const el = document.getElementById("subtitle");
