@@ -365,6 +365,8 @@
     render("region", region.cols, region.rows);
     render("complex", complex.cols, complex.rows);
 
+    window.lastRegion = region;
+    window.lastComplex = complex;
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
     if (errors.length > 0) {
       setSubtitle(`일부 로딩 실패: ${errors.join(" | ")}`);
