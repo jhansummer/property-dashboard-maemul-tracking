@@ -86,7 +86,7 @@
 
     <div class="card">
       <h2>1) 전체 통계</h2>
-      <div class="hint">• 면적 구간별 통합 데이터 (<33, >=165 제외 / ALL_BINS=전체)</div>
+      <div class="hint">• 면적 구간별 통합 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_all"></tr></thead>
@@ -106,7 +106,7 @@
         <select id="r2_3"><option value="">세부구(전체)</option></select>
         <span class="badge" id="badge_region">filter: *</span>
       </div>
-      <div class="hint">• 지역 및 면적 구간별 데이터 (<33, >=165 제외 / ALL_BINS=전체)</div>
+      <div class="hint">• 지역 및 면적 구간별 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_region"></tr></thead>
@@ -127,7 +127,7 @@
         <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
-      <div class="hint">• 주요 단지별 상세 데이터 (<33, >=165 제외 / ALL_BINS=전체)</div>
+      <div class="hint">• 주요 단지별 상세 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -299,7 +299,7 @@
     return (val ?? "");
   }
 
-  // ✅ spc_bin 행 제외 규칙: <33, >=165 제외 (전체/지역/단지 공통)
+  // ✅ spc_bin 행 제외 규칙: (소형(33㎡ 미만), 대형(165㎡ 초과) 제외) (전체/지역/단지 공통)
   function passSpcBinRow(r){
     const b = String(r?.spc_bin ?? "").trim();
     if (b === "<33") return false;
@@ -578,7 +578,7 @@
     VIEW_COLS.region  = (region.cols||[]).filter(c => !HIDE_COLS.region.has(c));
     VIEW_COLS.complex = (complex.cols||[]).filter(c => !HIDE_COLS.complex.has(c));
 
-    // ✅ spc_bin 필터 적용 (<33, >=165 제외)
+    // ✅ spc_bin 필터 적용 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)
     const allRows     = (all.rows||[]).filter(passSpcBinRow);
     const regionRows  = (region.rows||[]).filter(passSpcBinRow);
     const complexRows = (complex.rows||[]).filter(passSpcBinRow);
