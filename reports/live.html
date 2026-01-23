@@ -95,8 +95,8 @@
 /* ===== 설정 ===== */
 const DEFAULT_REGION = { r1:"서울시", r2:"강남구", r3:"" };
 const HIDE_COLS = {
-  all:new Set(["level","group"]),
-  region:new Set(["level"]),
+  all:    new Set(["level","group"]),
+  region: new Set(["level"]),
   complex:new Set(["level","hscpNo"])
 };
 const VIEW_COLS = { all:[], region:[], complex:[] };
@@ -108,93 +108,326 @@ const PATHS = {
 let state={type:"A1"};
 
 /* ===== 유틸 ===== */
-const uniq=a=>[...new Set(a.filter(Boolean))].sort();
-const toNum=v=>{if(!v)return null;v=String(v).replace('%','');const n=parseFloat(v);return isNaN(n)?null:n};
-const pctClass=v=>v>0?"good":v<0?"bad":"";
+function setSubtitle(msg){
+  const el=document.getElementById("subtitle");
+  if (el) el.textContent = msg;
+}
+window.onunhandledrejection = (ev)=>{
+  const m = ev?.reason?.message || String(ev?.reason || "unknown");
+  setSubtitle(`Promise 오류: ${m}`);
+};
+window.onerror = (message, source, lineno, colno)=>{
+  setSubtitle(`JS 오류: ${message} @${lineno}:${colno}`);
+};
+
+const uniq = (arr)=> {
+  return Array.from(new Set((arr||[])
+    .map(x=>String(x??"").trim())
+    .filter(x=>x!=="")))
+    .sort((a,b)=>a.localeCompare(b,"ko"));
+};
+
+function setOpts(sel, vals, placeholder){
+  if (!sel) return;
+  const cur = String(sel.value||"");
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  (vals||[]).forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  });
+  // 기존 선택 유지 (가능하면)
+  if (cur && (vals||[]).includes(cur)) sel.value = cur;
+}
+
+const toNum=v=>{
+  if(v==null) return null;
+  let s=String(v).trim();
+  if(!s || s==="-" ) return null;
+  if(s.endsWith("%")) s=s.slice(0,-1);
+  const n=parseFloat(s);
+  return Number.isFinite(n)?n:null;
+};
+const pctClass=n=> n>0?"good":n<0?"bad":"";
 
 /* ===== CSV ===== */
-function parseCSV(t){
-  if(!t)return{cols:[],rows:[]};
-  if(t.charCodeAt(0)===0xFEFF)t=t.slice(1);
-  const l=t.trim().split(/\r?\n/).map(r=>r.split(','));
-  const cols=l.shift();
-  return{cols,rows:l.map(r=>Object.fromEntries(cols.map((c,i)=>[c,r[i]||""])))};
+function parseCSV(text){
+  if(!text) return {cols:[], rows:[], error:"empty response"};
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+
+  // robust-ish (quotes 포함 가능)
+  const rows=[];
+  let row=[], cell="", inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch === '"'){
+      if(inQ && text[i+1] === '"'){ cell+='"'; i++; }
+      else inQ = !inQ;
+      continue;
+    }
+    if(!inQ && ch===','){ row.push(cell); cell=""; continue; }
+    if(!inQ && ch==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; continue; }
+    if(ch==='\r') continue;
+    cell+=ch;
+  }
+  if(cell.length || row.length){ row.push(cell); rows.push(row); }
+
+  const cleaned = rows.filter(r => r.some(c => String(c).trim()!==""));
+  if(cleaned.length<2) return {cols:[], rows:[], error:`lines<2 (${cleaned.length})`};
+
+  const cols = cleaned[0].map(x=>String(x).trim());
+  const out=[];
+  for(let i=1;i<cleaned.length;i++){
+    const parts=cleaned[i];
+    const obj={};
+    cols.forEach((c,idx)=> obj[c]=(parts[idx]??"").toString().trim());
+    out.push(obj);
+  }
+  return {cols, rows:out};
+}
+
+/* ===== 데이터 가공 =====
+   - <33, >=165 행 제거
+   - ALL_BINS -> '전체'
+*/
+function transform(rows){
+  return (rows||[])
+    .filter(r=> !["<33", ">=165"].includes(String(r.spc_bin||"").trim()))
+    .map(r=> (String(r.spc_bin||"").trim()==="ALL_BINS" ? ({...r, spc_bin:"전체"}) : r ));
 }
 
 /* ===== 렌더 ===== */
-function render(sec,cols,rows){
-  document.getElementById(`thead_${sec}`).innerHTML=cols.map(c=>`<th>${c}</th>`).join("");
-  document.getElementById(`tbody_${sec}`).innerHTML=rows.map(r=>
-    `<tr>${cols.map(c=>{
-      const v=r[c]||"";
+const NUM_COLS = new Set([
+  "prev_cnt","curr_cnt","new_cnt","del_cnt",
+  "prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok",
+  "avg_change_pct","new_premium_pct","del_premium_pct"
+]);
+
+function render(sec, cols, rows){
+  const thead=document.getElementById(`thead_${sec}`);
+  const tbody=document.getElementById(`tbody_${sec}`);
+  const cnt=document.getElementById(`cnt_${sec}`);
+  if(!thead || !tbody) return;
+
+  thead.innerHTML = (cols||[]).map(c=>`<th>${c}</th>`).join("");
+  tbody.innerHTML = (rows||[]).map(r=>{
+    return `<tr>${(cols||[]).map(c=>{
+      const v=r[c] ?? "";
       const n=toNum(v);
-      return `<td class="${n!=null?'num':''} ${v.includes('%')?`pct ${pctClass(n)}`:''}">${v}</td>`
-    }).join("")}</tr>`
-  ).join("");
-  document.getElementById(`cnt_${sec}`).textContent=`rows: ${rows.length}`;
+      const clsNum = NUM_COLS.has(c) ? "num" : "";
+      const clsPct = String(v).includes("%") ? `pct ${pctClass(n||0)}` : "";
+      return `<td class="${clsNum} ${clsPct}">${v}</td>`;
+    }).join("")}</tr>`;
+  }).join("");
+
+  if (cnt) cnt.textContent = `rows: ${(rows||[]).length}`;
 }
 
-/* ===== 데이터 가공 ===== */
-function transform(rows){
-  return rows
-    .filter(r=>!["<33",">=165"].includes(r.spc_bin))
-    .map(r=>r.spc_bin==="ALL_BINS"?{...r,spc_bin:"전체"}:r);
-}
-
-/* ===== 로드 ===== */
+/* ===== fetch ===== */
 async function loadOne(kind){
-  const t=await fetch(PATHS[state.type][kind]+"?v="+Date.now()).then(r=>r.text());
-  return parseCSV(t);
+  const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  if(!res.ok) return {cols:[], rows:[], error:`${kind}: HTTP ${res.status}`};
+  const head = text.slice(0,80).trim().toLowerCase();
+  if(head.startsWith("<!doctype html") || head.startsWith("<html")) {
+    return {cols:[], rows:[], error:`${kind}: got HTML not CSV`};
+  }
+  const parsed = parseCSV(text);
+  if(!parsed.cols.length) return {cols:[], rows:[], error:`${kind}: parse failed (${parsed.error||"unknown"})`};
+  return parsed;
 }
 
+/* =========================================================
+   2) 지역별 드롭다운 (region1 -> region2 -> region3)
+========================================================= */
+function initRegionFilters(regionObj){
+  const rows = regionObj?.rows || [];
+  const r1 = document.getElementById("r2_1");
+  const r2 = document.getElementById("r2_2");
+  const r3 = document.getElementById("r2_3");
+
+  if(!r1 || !r2 || !r3) return;
+
+  // 1) region1 채우기
+  setOpts(r1, uniq(rows.map(r=>r.region1)), "서울/경기(전체)");
+
+  // 기본값(서울시/강남구) 존재하면 세팅
+  if (uniq(rows.map(r=>r.region1)).includes(DEFAULT_REGION.r1)) r1.value = DEFAULT_REGION.r1;
+
+  function rebuildR2(){
+    const base = r1.value ? rows.filter(r=>String(r.region1||"").trim()===r1.value) : rows;
+    setOpts(r2, uniq(base.map(r=>r.region2)), "시·구(전체)");
+
+    // 서울시이면 기본 강남구 자동
+    if (r1.value === DEFAULT_REGION.r1) {
+      const list = uniq(base.map(r=>r.region2));
+      if (list.includes(DEFAULT_REGION.r2)) r2.value = DEFAULT_REGION.r2;
+    }
+  }
+
+  function rebuildR3(){
+    let base = rows;
+    if (r1.value) base = base.filter(r=>String(r.region1||"").trim()===r1.value);
+    if (r2.value) base = base.filter(r=>String(r.region2||"").trim()===r2.value);
+    setOpts(r3, uniq(base.map(r=>r.region3)), "세부구(전체)");
+  }
+
+  function apply(){
+    let out = rows.slice();
+    if (r1.value) out = out.filter(r=>String(r.region1||"").trim()===r1.value);
+    if (r2.value) out = out.filter(r=>String(r.region2||"").trim()===r2.value);
+    if (r3.value) out = out.filter(r=>String(r.region3||"").trim()===r3.value);
+    render("region", VIEW_COLS.region, out);
+  }
+
+  // bind
+  r1.onchange = ()=>{
+    rebuildR2();
+    r3.value=""; // r2가 바뀌면 r3 리셋
+    rebuildR3();
+    apply();
+  };
+  r2.onchange = ()=>{
+    rebuildR3();
+    apply();
+  };
+  r3.onchange = apply;
+
+  // 초기 구성
+  rebuildR2();
+  rebuildR3();
+  apply();
+}
+
+/* =========================================================
+   3) 단지별 드롭다운 (region1 -> region2 -> region3 -> complex_name)
+========================================================= */
+function initComplexFilters(complexObj){
+  const rows = complexObj?.rows || [];
+  const r1 = document.getElementById("r3_1");
+  const r2 = document.getElementById("r3_2");
+  const r3 = document.getElementById("r3_3");
+  const rc = document.getElementById("r3_c");
+
+  if(!r1 || !r2 || !r3 || !rc) return;
+
+  setOpts(r1, uniq(rows.map(r=>r.region1)), "서울/경기(전체)");
+  if (uniq(rows.map(r=>r.region1)).includes(DEFAULT_REGION.r1)) r1.value = DEFAULT_REGION.r1;
+
+  function baseByR1(){
+    return r1.value ? rows.filter(r=>String(r.region1||"").trim()===r1.value) : rows;
+  }
+  function baseByR2(){
+    let base = baseByR1();
+    if (r2.value) base = base.filter(r=>String(r.region2||"").trim()===r2.value);
+    return base;
+  }
+  function baseByR3(){
+    let base = baseByR2();
+    if (r3.value) base = base.filter(r=>String(r.region3||"").trim()===r3.value);
+    return base;
+  }
+
+  function rebuildR2(){
+    const base = baseByR1();
+    setOpts(r2, uniq(base.map(r=>r.region2)), "시·구(전체)");
+
+    // 서울시이면 기본 강남구 자동
+    if (r1.value === DEFAULT_REGION.r1) {
+      const list = uniq(base.map(r=>r.region2));
+      if (list.includes(DEFAULT_REGION.r2)) r2.value = DEFAULT_REGION.r2;
+    }
+  }
+  function rebuildR3(){
+    const base = baseByR2();
+    setOpts(r3, uniq(base.map(r=>r.region3)), "세부구(전체)");
+  }
+  function rebuildC(){
+    const base = baseByR3();
+    setOpts(rc, uniq(base.map(r=>r.complex_name)), "단지(전체)");
+  }
+
+  function apply(){
+    let out = rows.slice();
+    if (r1.value) out = out.filter(r=>String(r.region1||"").trim()===r1.value);
+    if (r2.value) out = out.filter(r=>String(r.region2||"").trim()===r2.value);
+    if (r3.value) out = out.filter(r=>String(r.region3||"").trim()===r3.value);
+    if (rc.value) out = out.filter(r=>String(r.complex_name||"").trim()===rc.value);
+    render("complex", VIEW_COLS.complex, out);
+  }
+
+  r1.onchange = ()=>{
+    // 상위 바뀌면 하위 reset
+    r2.value=""; r3.value=""; rc.value="";
+    rebuildR2(); rebuildR3(); rebuildC();
+    apply();
+  };
+  r2.onchange = ()=>{
+    r3.value=""; rc.value="";
+    rebuildR3(); rebuildC();
+    apply();
+  };
+  r3.onchange = ()=>{
+    rc.value="";
+    rebuildC();
+    apply();
+  };
+  rc.onchange = apply;
+
+  // 초기 구성
+  rebuildR2();
+  rebuildR3();
+  rebuildC();
+  apply();
+}
+
+/* ===== 전체 로드 ===== */
 async function loadAll(){
-  const all=await loadOne("all");
-  const region=await loadOne("region");
-  const complex=await loadOne("complex");
+  setSubtitle(`${state.type} 데이터를 불러오는 중...`);
 
-  const allRows=transform(all.rows);
-  const regionRows=transform(region.rows);
-  const complexRows=transform(complex.rows);
+  const [all0, region0, complex0] = await Promise.all([
+    loadOne("all"),
+    loadOne("region"),
+    loadOne("complex"),
+  ]);
 
-  VIEW_COLS.all=all.cols.filter(c=>!HIDE_COLS.all.has(c));
-  VIEW_COLS.region=region.cols.filter(c=>!HIDE_COLS.region.has(c));
-  VIEW_COLS.complex=complex.cols.filter(c=>!HIDE_COLS.complex.has(c));
+  if (all0.error || region0.error || complex0.error){
+    setSubtitle(`로드 실패: ${[all0.error, region0.error, complex0.error].filter(Boolean).join(" | ")}`);
+    return;
+  }
 
-  render("all",VIEW_COLS.all,allRows);
-  render("region",VIEW_COLS.region,regionRows);
-  render("complex",VIEW_COLS.complex,complexRows);
+  const allRows = transform(all0.rows);
+  const regionRows = transform(region0.rows);
+  const complexRows = transform(complex0.rows);
 
-  initRegion(regionRows);
-  initComplex(complexRows);
+  VIEW_COLS.all     = (all0.cols||[]).filter(c=>!HIDE_COLS.all.has(c));
+  VIEW_COLS.region  = (region0.cols||[]).filter(c=>!HIDE_COLS.region.has(c));
+  VIEW_COLS.complex = (complex0.cols||[]).filter(c=>!HIDE_COLS.complex.has(c));
 
-  document.getElementById("subtitle").textContent=`${state.type} 로드 완료`;
-  document.getElementById("lastLoaded").textContent=new Date().toLocaleTimeString();
-}
+  render("all", VIEW_COLS.all, allRows);
+  render("region", VIEW_COLS.region, regionRows);
+  render("complex", VIEW_COLS.complex, complexRows);
 
-/* ===== 드롭다운 ===== */
-function initRegion(rows){
-  const r1=document.getElementById("r2_1"),r2=document.getElementById("r2_2"),r3=document.getElementById("r2_3");
-  r1.innerHTML=`<option></option>`+uniq(rows.map(r=>r.region1)).map(v=>`<option>${v}</option>`).join("");
-  r1.value=DEFAULT_REGION.r1;
-  r2.innerHTML=uniq(rows.filter(r=>r.region1===r1.value).map(r=>r.region2)).map(v=>`<option>${v}</option>`).join("");
-  r2.value=DEFAULT_REGION.r2;
-  const apply=()=>render("region",VIEW_COLS.region,rows.filter(r=>(!r1.value||r.region1===r1.value)&&(!r2.value||r.region2===r2.value)));
-  r1.onchange=r2.onchange=apply; apply();
-}
-function initComplex(rows){
-  const r1=document.getElementById("r3_1"),r2=document.getElementById("r3_2"),r3=document.getElementById("r3_3"),rc=document.getElementById("r3_c");
-  r1.innerHTML=`<option></option>`+uniq(rows.map(r=>r.region1)).map(v=>`<option>${v}</option>`).join("");
-  r1.value=DEFAULT_REGION.r1;
-  r2.innerHTML=uniq(rows.filter(r=>r.region1===r1.value).map(r=>r.region2)).map(v=>`<option>${v}</option>`).join("");
-  r2.value=DEFAULT_REGION.r2;
-  const apply=()=>render("complex",VIEW_COLS.complex,rows.filter(r=>(!r1.value||r.region1===r1.value)&&(!r2.value||r.region2===r2.value)));
-  r1.onchange=r2.onchange=apply; apply();
+  // 드롭다운: 여기서부터 표를 "필터링 렌더"로 바꿈
+  initRegionFilters({cols:region0.cols, rows:regionRows});
+  initComplexFilters({cols:complex0.cols, rows:complexRows});
+
+  document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toLocaleTimeString()}`;
+  setSubtitle(`${state.type} · 로드 완료`);
 }
 
 /* ===== 토글 ===== */
-document.getElementById("pillA1").onclick=()=>{state.type="A1";loadAll()};
-document.getElementById("pillB1").onclick=()=>{state.type="B1";loadAll()};
-window.onload=loadAll;
+function setType(t){
+  state.type=t;
+  document.getElementById("pillA1").classList.toggle("on", t==="A1");
+  document.getElementById("pillB1").classList.toggle("on", t==="B1");
+  loadAll();
+}
+document.getElementById("pillA1").onclick = ()=>setType("A1");
+document.getElementById("pillB1").onclick = ()=>setType("B1");
+
+window.onload = ()=>loadAll();
 </script>
 </body>
 </html>
