@@ -76,6 +76,19 @@
 
     <div class="card">
       <h2>2) 지역별 상세</h2>
+      <!-- 지역별 드롭다운 -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <select id="r2_1">
+          <option value="">서울/경기(전체)</option>
+        </select>
+        <select id="r2_2">
+          <option value="">시·구(전체)</option>
+        </select>
+        <select id="r2_3">
+          <option value="">세부구(전체)</option>
+        </select>
+        <span class="badge" id="badge_region">filter: *</span>
+      </div>
       <div class="hint">• 지역 및 면적 구간별 데이터</div>
       <div class="tableWrap">
         <table>
@@ -90,6 +103,22 @@
 
     <div class="card">
       <h2>3) 단지별 상세</h2>
+      <!-- 단지별 드롭다운 -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <select id="r3_1">
+          <option value="">서울/경기(전체)</option>
+        </select>
+        <select id="r3_2">
+          <option value="">시·구(전체)</option>
+        </select>
+        <select id="r3_3">
+          <option value="">세부구(전체)</option>
+        </select>
+        <select id="r3_c">
+          <option value="">단지(전체)</option>
+        </select>
+        <span class="badge" id="badge_complex">filter: *</span>
+      </div>
       <div class="hint">• 주요 단지별 상세 데이터</div>
       <div class="tableWrap">
         <table>
@@ -357,6 +386,138 @@
   }
 
   window.onload = loadAll;
+  /* ===============================
+   Dropdown helpers
+=============================== */
+const uniq = arr =>
+  [...new Set(arr.filter(x=>x && String(x).trim()!==""))]
+    .map(x=>String(x).trim())
+    .sort((a,b)=>a.localeCompare(b,"ko"));
+
+function setOpts(sel, vals, ph){
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">${ph}</option>`;
+  vals.forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  });
+  if (vals.includes(cur)) sel.value = cur;
+}
+
+/* ===============================
+   2번 표: 지역별 드롭다운
+=============================== */
+function initRegionFilters(region){
+  if (!region || !region.rows) return;
+
+  const r1 = document.getElementById("r2_1");
+  const r2 = document.getElementById("r2_2");
+  const r3 = document.getElementById("r2_3");
+  const badge = document.getElementById("badge_region");
+  if (!r1||!r2||!r3) return;
+
+  setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
+  setOpts(r2, [], "시·구(전체)");
+  setOpts(r3, [], "세부구(전체)");
+
+  const apply = ()=>{
+    let rows = region.rows.slice();
+    if (r1.value) rows = rows.filter(r=>r.region1===r1.value);
+    if (r2.value) rows = rows.filter(r=>r.region2===r2.value);
+    if (r3.value) rows = rows.filter(r=>r.region3===r3.value);
+    render("region", region.cols, rows);
+    badge.textContent =
+      `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ")||"*"}`
+  };
+
+  r1.onchange = ()=>{
+    const rows1 = r1.value ? region.rows.filter(r=>r.region1===r1.value) : region.rows;
+    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
+    setOpts(r3, [], "세부구(전체)");
+    apply();
+  };
+
+  r2.onchange = ()=>{
+    let rows2 = region.rows;
+    if (r1.value) rows2 = rows2.filter(r=>r.region1===r1.value);
+    if (r2.value) rows2 = rows2.filter(r=>r.region2===r2.value);
+    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
+    apply();
+  };
+
+  r3.onchange = apply;
+  apply();
+}
+
+/* ===============================
+   3번 표: 지역 + 단지 드롭다운
+=============================== */
+function initComplexFilters(complex){
+  if (!complex || !complex.rows) return;
+
+  const r1 = document.getElementById("r3_1");
+  const r2 = document.getElementById("r3_2");
+  const r3 = document.getElementById("r3_3");
+  const rc = document.getElementById("r3_c");
+  const badge = document.getElementById("badge_complex");
+  if (!r1||!r2||!r3||!rc) return;
+
+  setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
+  setOpts(r2, [], "시·구(전체)");
+  setOpts(r3, [], "세부구(전체)");
+  setOpts(rc, [], "단지(전체)");
+
+  const apply = ()=>{
+    let rows = complex.rows.slice();
+    if (r1.value) rows = rows.filter(r=>r.region1===r1.value);
+    if (r2.value) rows = rows.filter(r=>r.region2===r2.value);
+    if (r3.value) rows = rows.filter(r=>r.region3===r3.value);
+    if (rc.value) rows = rows.filter(r=>r.complex_name===rc.value);
+    render("complex", complex.cols, rows);
+    badge.textContent =
+      `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ")||"*"}`
+  };
+
+  r1.onchange = ()=>{
+    const rows1 = r1.value ? complex.rows.filter(r=>r.region1===r1.value) : complex.rows;
+    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
+    setOpts(r3, [], "세부구(전체)");
+    setOpts(rc, [], "단지(전체)");
+    apply();
+  };
+
+  r2.onchange = ()=>{
+    let rows2 = complex.rows;
+    if (r1.value) rows2 = rows2.filter(r=>r.region1===r1.value);
+    if (r2.value) rows2 = rows2.filter(r=>r.region2===r2.value);
+    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
+    setOpts(rc, [], "단지(전체)");
+    apply();
+  };
+
+  r3.onchange = ()=>{
+    let rows3 = complex.rows;
+    if (r1.value) rows3 = rows3.filter(r=>r.region1===r1.value);
+    if (r2.value) rows3 = rows3.filter(r=>r.region2===r2.value);
+    if (r3.value) rows3 = rows3.filter(r=>r.region3===r3.value);
+    setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
+    apply();
+  };
+
+  rc.onchange = apply;
+  apply();
+}
+
+/* ===============================
+   loadAll 훅
+=============================== */
+const _loadAll = loadAll;
+loadAll = async function(){
+  await _loadAll();
+  if (window.lastRegion) initRegionFilters(window.lastRegion);
+  if (window.lastComplex) initComplexFilters(window.lastComplex);
+};
 </script>
 </body>
 </html>
