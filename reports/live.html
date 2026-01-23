@@ -66,7 +66,7 @@
 
     <div class="card">
       <h2>1) 전체 통계</h2>
-      <div class="hint">• 면적 구간별 통합 데이터</div>
+      <div class="hint">• 면적 구간별 통합 데이터 (※ &lt;33, &gt;=165 제외 / ALL_BINS=전체)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_all"></tr></thead>
@@ -86,7 +86,7 @@
         <select id="r2_3"><option value="">세부구(전체)</option></select>
         <span class="badge" id="badge_region">filter: *</span>
       </div>
-      <div class="hint">• 지역 및 면적 구간별 데이터</div>
+      <div class="hint">• 지역 및 면적 구간별 데이터 (※ &lt;33, &gt;=165 제외 / ALL_BINS=전체)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_region"></tr></thead>
@@ -107,7 +107,7 @@
         <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
-      <div class="hint">• 주요 단지별 상세 데이터</div>
+      <div class="hint">• 주요 단지별 상세 데이터 (※ &lt;33, &gt;=165 제외 / ALL_BINS=전체)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -153,20 +153,15 @@
     del_premium_pct: "삭제매물가(평균대비%)"
   };
 
-  // 표별 숨길 컬럼 (요구사항 반영)
-  // 1번: 구분, 집계
-  // 2번: 구분
-  // 3번: 구분, 단지ID
+  // 표별 숨길 컬럼
   const HIDE_COLS = {
     all:    new Set(["level", "group"]),
     region: new Set(["level"]),
     complex:new Set(["level", "hscpNo"]),
   };
 
-  // 표별 실제 렌더에 사용할 컬럼(필터 적용 후) 캐시
   const VIEW_COLS = { all:[], region:[], complex:[] };
 
-  // ---- Global error reporting (mobile-friendly) ----
   function setSubtitle(msg){
     const el = document.getElementById("subtitle");
     if (el) el.textContent = msg;
@@ -194,7 +189,7 @@
 
   let state = { type:"A1" };
 
-  // Robust CSV parser (commas/quotes/newlines-in-quotes OK)
+  // Robust CSV parser
   function parseCSV(text){
     if (!text) return {cols:[], rows:[], error:"empty response"};
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
@@ -236,6 +231,20 @@
     return {cols, rows: out};
   }
 
+  // ✅ spc_bin: <33, >=165 제외 + ALL_BINS -> 전체
+  function transformRows(rows){
+    return (rows || [])
+      .filter(r => {
+        const b = String(r.spc_bin || "").trim();
+        return b !== "<33" && b !== ">=165";
+      })
+      .map(r => {
+        const b = String(r.spc_bin || "").trim();
+        if (b === "ALL_BINS") return { ...r, spc_bin: "전체" };
+        return r;
+      });
+  }
+
   function toNum(x){
     if (x == null) return null;
     let s = String(x).trim();
@@ -273,9 +282,8 @@
   function render(sectionId, cols, rows){
     const thead = document.getElementById(`thead_${sectionId}`);
     const tbody = document.getElementById(`tbody_${sectionId}`);
-    const meta = document.getElementById(`meta_${sectionId}`);
-    const cnt = document.getElementById(`cnt_${sectionId}`);
-
+    const meta  = document.getElementById(`meta_${sectionId}`);
+    const cnt   = document.getElementById(`cnt_${sectionId}`);
     if (!thead || !tbody || !meta || !cnt) return;
 
     thead.innerHTML = "";
@@ -315,7 +323,6 @@
     meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
   }
 
-  // fetch with timeout to prevent infinite loading
   async function fetchTextWithTimeout(url, ms=10000){
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), ms);
@@ -332,7 +339,6 @@
     const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
     try {
       const { res, text } = await fetchTextWithTimeout(url, 10000);
-
       if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status}`};
 
       const head = text.slice(0, 80).trim().toLowerCase();
@@ -352,7 +358,7 @@
     }
   }
 
-  // ===== dropdown helpers =====
+  // dropdown helpers
   function uniq(arr){
     return Array.from(new Set((arr||[]).filter(x => x != null && String(x).trim() !== "")))
       .map(x => String(x).trim())
@@ -369,9 +375,6 @@
     if (cur && (vals||[]).includes(cur)) sel.value = cur;
   }
 
-  /* ===============================
-     2) region dropdown -> re-render region table
-  =============================== */
   function initRegionFilters(region){
     const r1 = document.getElementById("r2_1");
     const r2 = document.getElementById("r2_2");
@@ -402,7 +405,6 @@
       if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
       if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
 
-      // ✅ 여기 중요: region.cols가 아니라 VIEW_COLS.region 사용
       render("region", VIEW_COLS.region, rows);
 
       if (badge) badge.textContent =
@@ -418,9 +420,6 @@
     apply();
   }
 
-  /* ===============================
-     3) complex dropdown -> re-render complex table
-  =============================== */
   function initComplexFilters(complex){
     const r1 = document.getElementById("r3_1");
     const r2 = document.getElementById("r3_2");
@@ -463,7 +462,6 @@
       if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
       if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
 
-      // ✅ 여기 중요: complex.cols가 아니라 VIEW_COLS.complex 사용
       render("complex", VIEW_COLS.complex, rows);
 
       if (badge) badge.textContent =
@@ -502,21 +500,32 @@
       loadOne("complex"),
     ]);
 
-    const all    = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
-    const region = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
-    const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
+    const allRaw     = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
+    const regionRaw  = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
+    const complexRaw = (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
 
-    // ✅ 컬럼 필터링을 여기서 "한 번만" 적용하고 VIEW_COLS로 고정
+    // ✅ 행 가공 적용 (<33, >=165 제거 + ALL_BINS -> 전체)
+    const all = {
+      ...allRaw,
+      rows: transformRows(allRaw.rows || [])
+    };
+    const region = {
+      ...regionRaw,
+      rows: transformRows(regionRaw.rows || [])
+    };
+    const complex = {
+      ...complexRaw,
+      rows: transformRows(complexRaw.rows || [])
+    };
+
     VIEW_COLS.all     = (all.cols||[]).filter(c => !HIDE_COLS.all.has(c));
     VIEW_COLS.region  = (region.cols||[]).filter(c => !HIDE_COLS.region.has(c));
     VIEW_COLS.complex = (complex.cols||[]).filter(c => !HIDE_COLS.complex.has(c));
 
-    // ✅ 최초 렌더는 필터된 컬럼으로
     render("all", VIEW_COLS.all, all.rows);
     render("region", VIEW_COLS.region, region.rows);
     render("complex", VIEW_COLS.complex, complex.rows);
 
-    // ✅ 드롭다운 적용 렌더도 VIEW_COLS를 쓰도록 init 함수가 처리
     initRegionFilters(region);
     initComplexFilters(complex);
 
