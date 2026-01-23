@@ -13,47 +13,22 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
     .wrap{max-width:1400px;margin:0 auto;padding:14px}
-
-    .topbar{
-      position:sticky;top:0;z-index:50;
-      background:rgba(11,15,23,.92);backdrop-filter:blur(10px);
-      border-bottom:1px solid var(--line)
-    }
+    .topbar{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
     .topbar .wrap{padding:10px 14px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .title{font-size:16px;font-weight:700}
     .sub{font-size:12px;color:var(--muted)}
     .spacer{flex:1}
     .pills{display:flex;gap:8px;flex-wrap:wrap}
-    .pill{
-      background:var(--pill);border:1px solid var(--line);color:var(--text);
-      padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none
-    }
+    .pill{background:var(--pill);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none}
     .pill.on{background:var(--pillOn);border-color:#3a4a70;font-weight:bold}
-    .badge{
-      font-size:11px;color:#cfe0ff;border:1px solid var(--line);
-      padding:4px 8px;border-radius:999px;background:#0f1626
-    }
+    .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
     .card h2{margin:0 0 10px 0;font-size:15px;color:#fff}
     .hint{font-size:12px;color:var(--muted);margin-bottom:10px}
-
-    /* ✅ 모바일 iOS에서 select 터치가 막히는 이슈 방지용 레이어 정리 */
-    .filters{position:relative; z-index:9999;}
-    .filters, .filters * { pointer-events:auto; } /* iOS 터치 히트테스트 보강 */
-
-    .tableWrap{
-      overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626;
-      position:relative; z-index:1;
-      -webkit-overflow-scrolling:touch;
-    }
+    .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626}
     table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
-    thead th{
-      position:sticky;top:0;
-      background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;
-      border-bottom:1px solid var(--line);padding:10px;white-space:nowrap;
-      z-index:2; /* ✅ sticky header가 필터 위로 못 올라오게 */
-    }
+    thead th{position:sticky;top:0;background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap}
     tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
     tbody tr:hover td{background:rgba(138,180,255,.06)}
     .num{text-align:right;font-variant-numeric:tabular-nums}
@@ -61,12 +36,7 @@
     .pct.bad{color:var(--bad);font-weight:700}
     .mini{font-size:11px;color:var(--muted);margin-top:8px}
     .loading-row td{text-align:center;padding:40px;color:var(--muted)}
-    .warn{
-      margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);
-      background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);
-      font-size:12px;white-space:pre-wrap
-    }
-
+    .warn{margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);font-size:12px;white-space:pre-wrap}
     select{
       background:#0f1626;border:1px solid var(--line);color:var(--text);
       padding:10px 10px;border-radius:12px;outline:none;font-size:13px
@@ -84,8 +54,8 @@
         </div>
         <div class="spacer"></div>
         <div class="pills" aria-label="trade type">
-          <div class="pill on" id="pillA1" onclick="setType('A1')">A1 (매매)</div>
-          <div class="pill" id="pillB1" onclick="setType('B1')">B1 (전세)</div>
+          <div class="pill on" id="pillA1">A1 (매매)</div>
+          <div class="pill" id="pillB1">B1 (전세)</div>
         </div>
         <span class="badge" id="lastLoaded">loaded: -</span>
       </div>
@@ -110,15 +80,12 @@
 
     <div class="card">
       <h2>2) 지역별 상세</h2>
-
-      <!-- ✅ region dropdowns -->
-      <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <select id="r2_1"><option value="">서울/경기(전체)</option></select>
         <select id="r2_2"><option value="">시·구(전체)</option></select>
         <select id="r2_3"><option value="">세부구(전체)</option></select>
         <span class="badge" id="badge_region">filter: *</span>
       </div>
-
       <div class="hint">• 지역 및 면적 구간별 데이터</div>
       <div class="tableWrap">
         <table>
@@ -133,16 +100,13 @@
 
     <div class="card">
       <h2>3) 단지별 상세</h2>
-
-      <!-- ✅ complex dropdowns -->
-      <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <select id="r3_1"><option value="">서울/경기(전체)</option></select>
         <select id="r3_2"><option value="">시·구(전체)</option></select>
         <select id="r3_3"><option value="">세부구(전체)</option></select>
         <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
-
       <div class="hint">• 주요 단지별 상세 데이터</div>
       <div class="tableWrap">
         <table>
@@ -159,32 +123,50 @@
 
 <script>
   /* =========================
-     표시용 컬럼명 매핑
-     ========================= */
+     화면 표시용 컬럼명 매핑
+  ========================= */
   const COL_LABELS = {
     level: "구분",
     group: "집계",
-    spc_bin: "평형구간",
-    region1: "광역",
-    region2: "시/구",
-    region3: "구/동",
     hscpNo: "단지ID",
     complex_name: "단지명",
+    region1: "광역",
+    region2: "시·구",
+    region3: "세부",
+
+    spc_bin: "평형구간",
 
     prev_cnt: "이전 매물수",
     prev_avg_eok: "이전 평균가(억)",
+
     curr_cnt: "현재 매물수",
     curr_avg_eok: "현재 평균가(억)",
+
     avg_change_pct: "평균가 변화율",
+
     new_cnt: "신규 매물수",
     new_avg_eok: "신규 평균가(억)",
     new_premium_pct: "신규 프리미엄",
+
     del_cnt: "삭제 매물수",
     del_avg_eok: "삭제 평균가(억)",
     del_premium_pct: "삭제 프리미엄"
   };
 
-  // ---- Global error reporting ----
+  // 표별 숨길 컬럼 (요구사항 반영)
+  // 1번: 구분, 집계
+  // 2번: 구분
+  // 3번: 구분, 단지ID
+  const HIDE_COLS = {
+    all:    new Set(["level", "group"]),
+    region: new Set(["level"]),
+    complex:new Set(["level", "hscpNo"]),
+  };
+
+  // 표별 실제 렌더에 사용할 컬럼(필터 적용 후) 캐시
+  const VIEW_COLS = { all:[], region:[], complex:[] };
+
+  // ---- Global error reporting (mobile-friendly) ----
   function setSubtitle(msg){
     const el = document.getElementById("subtitle");
     if (el) el.textContent = msg;
@@ -230,6 +212,7 @@
         else inQ = !inQ;
         continue;
       }
+
       if (!inQ && ch === ','){ row.push(cell); cell=""; continue; }
       if (!inQ && ch === '\n'){ row.push(cell); cell=""; rows.push(row); row=[]; continue; }
       if (ch === '\r') continue;
@@ -276,11 +259,13 @@
 
   function showWarn(sectionId, msg){
     const el = document.getElementById(`warn_${sectionId}`);
+    if (!el) return;
     el.style.display = "block";
     el.textContent = msg;
   }
   function hideWarn(sectionId){
     const el = document.getElementById(`warn_${sectionId}`);
+    if (!el) return;
     el.style.display = "none";
     el.textContent = "";
   }
@@ -290,6 +275,8 @@
     const tbody = document.getElementById(`tbody_${sectionId}`);
     const meta = document.getElementById(`meta_${sectionId}`);
     const cnt = document.getElementById(`cnt_${sectionId}`);
+
+    if (!thead || !tbody || !meta || !cnt) return;
 
     thead.innerHTML = "";
     tbody.innerHTML = "";
@@ -307,7 +294,7 @@
       thead.appendChild(th);
     });
 
-    rows.forEach(r => {
+    (rows || []).forEach(r => {
       const tr = document.createElement("tr");
       cols.forEach(c => {
         const td = document.createElement("td");
@@ -324,10 +311,11 @@
       tbody.appendChild(tr);
     });
 
-    cnt.textContent = `rows: ${rows.length}`;
+    cnt.textContent = `rows: ${(rows||[]).length}`;
     meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
   }
 
+  // fetch with timeout to prevent infinite loading
   async function fetchTextWithTimeout(url, ms=10000){
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), ms);
@@ -364,25 +352,26 @@
     }
   }
 
-  /* ===============================
-     Dropdown logic (region/complex)
-     =============================== */
+  // ===== dropdown helpers =====
   function uniq(arr){
-    return Array.from(new Set(arr.filter(x => x != null && String(x).trim() !== "")))
+    return Array.from(new Set((arr||[]).filter(x => x != null && String(x).trim() !== "")))
       .map(x => String(x).trim())
       .sort((a,b)=>a.localeCompare(b,"ko"));
   }
   function setOpts(sel, vals, ph){
-    const cur = sel.value || "";
+    const cur = (sel && sel.value) ? sel.value : "";
     sel.innerHTML = `<option value="">${ph}</option>`;
-    vals.forEach(v=>{
+    (vals||[]).forEach(v=>{
       const o=document.createElement("option");
       o.value=v; o.textContent=v;
       sel.appendChild(o);
     });
-    if (cur && vals.includes(cur)) sel.value = cur;
+    if (cur && (vals||[]).includes(cur)) sel.value = cur;
   }
 
+  /* ===============================
+     2) region dropdown -> re-render region table
+  =============================== */
   function initRegionFilters(region){
     const r1 = document.getElementById("r2_1");
     const r2 = document.getElementById("r2_2");
@@ -391,15 +380,6 @@
     if (!r1 || !r2 || !r3 || !region || !region.rows) return;
 
     setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
-
-    const apply = ()=>{
-      let rows = region.rows.slice();
-      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
-      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
-      render("region", region.cols, rows);
-      if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ") || "*"}`;
-    };
 
     const refreshR2 = ()=>{
       const rows1 = r1.value
@@ -416,13 +396,31 @@
       setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
     };
 
+    const apply = ()=>{
+      let rows = region.rows.slice();
+      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
+      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
+
+      // ✅ 여기 중요: region.cols가 아니라 VIEW_COLS.region 사용
+      render("region", VIEW_COLS.region, rows);
+
+      if (badge) badge.textContent =
+        `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ") || "*"}`;
+    };
+
     r1.onchange = ()=>{ refreshR2(); r2.value=""; r3.value=""; apply(); };
     r2.onchange = ()=>{ refreshR3(); r3.value=""; apply(); };
     r3.onchange = apply;
 
-    refreshR2(); refreshR3(); apply();
+    refreshR2();
+    refreshR3();
+    apply();
   }
 
+  /* ===============================
+     3) complex dropdown -> re-render complex table
+  =============================== */
   function initComplexFilters(complex){
     const r1 = document.getElementById("r3_1");
     const r2 = document.getElementById("r3_2");
@@ -432,16 +430,6 @@
     if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
 
     setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
-
-    const apply = ()=>{
-      let rows = complex.rows.slice();
-      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
-      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
-      if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
-      render("complex", complex.cols, rows);
-      if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ") || "*"}`;
-    };
 
     const refreshR2 = ()=>{
       const rows1 = r1.value
@@ -468,12 +456,29 @@
       setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
     };
 
+    const apply = ()=>{
+      let rows = complex.rows.slice();
+      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
+      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
+      if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
+
+      // ✅ 여기 중요: complex.cols가 아니라 VIEW_COLS.complex 사용
+      render("complex", VIEW_COLS.complex, rows);
+
+      if (badge) badge.textContent =
+        `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ") || "*"}`;
+    };
+
     r1.onchange = ()=>{ refreshR2(); r2.value=""; r3.value=""; rc.value=""; apply(); };
     r2.onchange = ()=>{ refreshR3(); r3.value=""; rc.value=""; apply(); };
     r3.onchange = ()=>{ refreshComplex(); rc.value=""; apply(); };
     rc.onchange = apply;
 
-    refreshR2(); refreshR3(); refreshComplex(); apply();
+    refreshR2();
+    refreshR3();
+    refreshComplex();
+    apply();
   }
 
   async function loadAll(){
@@ -481,10 +486,14 @@
 
     ["all","region","complex"].forEach(id => {
       hideWarn(id);
-      document.getElementById(`tbody_${id}`).innerHTML = "<tr class='loading-row'><td colspan='100'>데이터 로딩 중...</td></tr>";
-      document.getElementById(`thead_${id}`).innerHTML = "";
-      document.getElementById(`cnt_${id}`).textContent = "rows: -";
-      document.getElementById(`meta_${id}`).textContent = "";
+      const tb = document.getElementById(`tbody_${id}`);
+      const th = document.getElementById(`thead_${id}`);
+      const c  = document.getElementById(`cnt_${id}`);
+      const m  = document.getElementById(`meta_${id}`);
+      if (tb) tb.innerHTML = "<tr class='loading-row'><td colspan='100'>데이터 로딩 중...</td></tr>";
+      if (th) th.innerHTML = "";
+      if (c)  c.textContent = "rows: -";
+      if (m)  m.textContent = "";
     });
 
     const results = await Promise.allSettled([
@@ -492,26 +501,22 @@
       loadOne("region"),
       loadOne("complex"),
     ]);
-    const all     = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
-    const region  = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
-    const complex = (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
-    // 표별 숨길 컬럼 정의
-    const HIDE_COLS = {
-      all:    new Set(["level", "group"]),
-      region: new Set(["level"]),
-      complex:new Set(["level", "hscpNo"]),
-    };
-    const allColsFiltered =
-      all.cols.filter(c => !HIDE_COLS.all.has(c));
-    const regionColsFiltered =
-      region.cols.filter(c => !HIDE_COLS.region.has(c));
-    const complexColsFiltered =
-      complex.cols.filter(c => !HIDE_COLS.complex.has(c));
 
-    render("all", allColsFiltered, all.rows);
-    render("region", regionColsFiltered, region.rows);
-    render("complex", complexColsFiltered, complex.rows);
-    // init dropdowns (these will re-render region/complex)
+    const all    = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
+    const region = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
+    const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
+
+    // ✅ 컬럼 필터링을 여기서 "한 번만" 적용하고 VIEW_COLS로 고정
+    VIEW_COLS.all     = (all.cols||[]).filter(c => !HIDE_COLS.all.has(c));
+    VIEW_COLS.region  = (region.cols||[]).filter(c => !HIDE_COLS.region.has(c));
+    VIEW_COLS.complex = (complex.cols||[]).filter(c => !HIDE_COLS.complex.has(c));
+
+    // ✅ 최초 렌더는 필터된 컬럼으로
+    render("all", VIEW_COLS.all, all.rows);
+    render("region", VIEW_COLS.region, region.rows);
+    render("complex", VIEW_COLS.complex, complex.rows);
+
+    // ✅ 드롭다운 적용 렌더도 VIEW_COLS를 쓰도록 init 함수가 처리
     initRegionFilters(region);
     initComplexFilters(complex);
 
@@ -534,6 +539,9 @@
     document.getElementById("pillB1").classList.toggle("on", t === "B1");
     loadAll();
   }
+
+  document.getElementById("pillA1").onclick = ()=> setType("A1");
+  document.getElementById("pillB1").onclick = ()=> setType("B1");
 
   window.onload = loadAll;
 </script>
