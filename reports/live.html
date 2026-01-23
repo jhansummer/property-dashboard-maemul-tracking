@@ -13,22 +13,47 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
     .wrap{max-width:1400px;margin:0 auto;padding:14px}
-    .topbar{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      background:rgba(11,15,23,.92);backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line)
+    }
     .topbar .wrap{padding:10px 14px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .title{font-size:16px;font-weight:700}
     .sub{font-size:12px;color:var(--muted)}
     .spacer{flex:1}
     .pills{display:flex;gap:8px;flex-wrap:wrap}
-    .pill{background:var(--pill);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none}
+    .pill{
+      background:var(--pill);border:1px solid var(--line);color:var(--text);
+      padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none
+    }
     .pill.on{background:var(--pillOn);border-color:#3a4a70;font-weight:bold}
-    .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
+    .badge{
+      font-size:11px;color:#cfe0ff;border:1px solid var(--line);
+      padding:4px 8px;border-radius:999px;background:#0f1626
+    }
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
     .card h2{margin:0 0 10px 0;font-size:15px;color:#fff}
     .hint{font-size:12px;color:var(--muted);margin-bottom:10px}
-    .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626}
+
+    /* ✅ 모바일 iOS에서 select 터치가 막히는 이슈 방지용 레이어 정리 */
+    .filters{position:relative; z-index:9999;}
+    .filters, .filters * { pointer-events:auto; } /* iOS 터치 히트테스트 보강 */
+
+    .tableWrap{
+      overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626;
+      position:relative; z-index:1;
+      -webkit-overflow-scrolling:touch;
+    }
     table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
-    thead th{position:sticky;top:0;background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap}
+    thead th{
+      position:sticky;top:0;
+      background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;
+      border-bottom:1px solid var(--line);padding:10px;white-space:nowrap;
+      z-index:2; /* ✅ sticky header가 필터 위로 못 올라오게 */
+    }
     tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
     tbody tr:hover td{background:rgba(138,180,255,.06)}
     .num{text-align:right;font-variant-numeric:tabular-nums}
@@ -36,8 +61,16 @@
     .pct.bad{color:var(--bad);font-weight:700}
     .mini{font-size:11px;color:var(--muted);margin-top:8px}
     .loading-row td{text-align:center;padding:40px;color:var(--muted)}
-    .warn{margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);font-size:12px;white-space:pre-wrap}
-    select{background:#0f1626;border:1px solid var(--line);color:var(--text);padding:10px 10px;border-radius:12px;outline:none;font-size:13px}
+    .warn{
+      margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);
+      background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);
+      font-size:12px;white-space:pre-wrap
+    }
+
+    select{
+      background:#0f1626;border:1px solid var(--line);color:var(--text);
+      padding:10px 10px;border-radius:12px;outline:none;font-size:13px
+    }
   </style>
 </head>
 
@@ -51,8 +84,8 @@
         </div>
         <div class="spacer"></div>
         <div class="pills" aria-label="trade type">
-          <div class="pill on" id="pillA1" onclick="setType('A1')"> 매매</div>
-          <div class="pill" id="pillB1" onclick="setType('B1')"> 전세</div>
+          <div class="pill on" id="pillA1" onclick="setType('A1')">A1 (매매)</div>
+          <div class="pill" id="pillB1" onclick="setType('B1')">B1 (전세)</div>
         </div>
         <span class="badge" id="lastLoaded">loaded: -</span>
       </div>
@@ -78,8 +111,8 @@
     <div class="card">
       <h2>2) 지역별 상세</h2>
 
-      <!-- 지역별 드롭다운 -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <!-- ✅ region dropdowns -->
+      <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <select id="r2_1"><option value="">서울/경기(전체)</option></select>
         <select id="r2_2"><option value="">시·구(전체)</option></select>
         <select id="r2_3"><option value="">세부구(전체)</option></select>
@@ -101,8 +134,8 @@
     <div class="card">
       <h2>3) 단지별 상세</h2>
 
-      <!-- 단지별 드롭다운 -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <!-- ✅ complex dropdowns -->
+      <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <select id="r3_1"><option value="">서울/경기(전체)</option></select>
         <select id="r3_2"><option value="">시·구(전체)</option></select>
         <select id="r3_3"><option value="">세부구(전체)</option></select>
@@ -126,12 +159,12 @@
 
 <script>
   /* =========================
-     화면 표시용 컬럼명 매핑
+     표시용 컬럼명 매핑
      ========================= */
   const COL_LABELS = {
     level: "구분",
     group: "집계",
-    spc_bin: "m2",
+    spc_bin: "평형구간",
     region1: "광역",
     region2: "시/구",
     region3: "구/동",
@@ -145,13 +178,13 @@
     avg_change_pct: "평균가 변화율",
     new_cnt: "신규 매물수",
     new_avg_eok: "신규 평균가(억)",
-    new_premium_pct: "신규매물가(평균대비%)",
+    new_premium_pct: "신규 프리미엄",
     del_cnt: "삭제 매물수",
     del_avg_eok: "삭제 평균가(억)",
-    del_premium_pct: "삭제매물가(평균대비%)"
+    del_premium_pct: "삭제 프리미엄"
   };
 
-  // ---- Global error reporting (mobile-friendly) ----
+  // ---- Global error reporting ----
   function setSubtitle(msg){
     const el = document.getElementById("subtitle");
     if (el) el.textContent = msg;
@@ -197,7 +230,6 @@
         else inQ = !inQ;
         continue;
       }
-
       if (!inQ && ch === ','){ row.push(cell); cell=""; continue; }
       if (!inQ && ch === '\n'){ row.push(cell); cell=""; rows.push(row); row=[]; continue; }
       if (ch === '\r') continue;
@@ -296,7 +328,6 @@
     meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
   }
 
-  // fetch with timeout to prevent infinite loading
   async function fetchTextWithTimeout(url, ms=10000){
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), ms);
@@ -334,7 +365,7 @@
   }
 
   /* ===============================
-     Dropdown logic (NO duplicates)
+     Dropdown logic (region/complex)
      =============================== */
   function uniq(arr){
     return Array.from(new Set(arr.filter(x => x != null && String(x).trim() !== "")))
@@ -469,7 +500,7 @@
     render("region", region.cols, region.rows);
     render("complex", complex.cols, complex.rows);
 
-    // init dropdowns (these will re-render region/complex with filtered rows)
+    // init dropdowns (these will re-render region/complex)
     initRegionFilters(region);
     initComplexFilters(complex);
 
