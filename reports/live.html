@@ -365,6 +365,10 @@
     render("region", region.cols, region.rows);
     render("complex", complex.cols, complex.rows);
 
+    // ✅ 이 2줄 추가
+    initRegionFilters(region);
+    initComplexFilters(complex);
+    
     window.lastRegion = region;
     window.lastComplex = complex;
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
@@ -511,15 +515,146 @@ function initComplexFilters(complex){
   apply();
 }
 
-/* ===============================
-   loadAll 훅
-=============================== */
-const _loadAll = loadAll;
-loadAll = async function(){
-  await _loadAll();
-  if (window.lastRegion) initRegionFilters(window.lastRegion);
-  if (window.lastComplex) initComplexFilters(window.lastComplex);
-};
+// ===== dropdown helpers =====
+function uniq(arr){
+  return Array.from(new Set(arr.filter(x => x != null && String(x).trim() !== "")))
+    .map(x => String(x).trim())
+    .sort((a,b)=>a.localeCompare(b,"ko"));
+}
+function setOpts(sel, vals, ph){
+  const cur = sel.value || "";
+  sel.innerHTML = `<option value="">${ph}</option>`;
+  vals.forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  });
+  if (cur && vals.includes(cur)) sel.value = cur;
+}
+
+// ===== 2) region dropdown -> re-render region table =====
+function initRegionFilters(region){
+  const r1 = document.getElementById("r2_1");
+  const r2 = document.getElementById("r2_2");
+  const r3 = document.getElementById("r2_3");
+  const badge = document.getElementById("badge_region");
+  if (!r1 || !r2 || !r3 || !region || !region.rows) return;
+
+  // region1 options
+  setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
+
+  const apply = ()=>{
+    let rows = region.rows.slice();
+    if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
+    if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
+    if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
+    render("region", region.cols, rows);
+    if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ") || "*"}`;
+  };
+
+  const refreshR2 = ()=>{
+    const rows1 = r1.value
+      ? region.rows.filter(r => String(r.region1||"").trim() === r1.value)
+      : region.rows;
+    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
+    // r3는 r2까지 선택된 이후 채우는 게 자연스러움
+    setOpts(r3, [], "세부구(전체)");
+  };
+
+  const refreshR3 = ()=>{
+    let rows2 = region.rows.slice();
+    if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
+    if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
+    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
+  };
+
+  // bind
+  r1.onchange = ()=>{
+    refreshR2();
+    r2.value = ""; r3.value = "";
+    apply();
+  };
+  r2.onchange = ()=>{
+    refreshR3();
+    r3.value = "";
+    apply();
+  };
+  r3.onchange = apply;
+
+  // initial fill based on current selections (or empty)
+  refreshR2();
+  refreshR3();
+  apply();
+}
+
+// ===== 3) complex dropdown -> re-render complex table =====
+function initComplexFilters(complex){
+  const r1 = document.getElementById("r3_1");
+  const r2 = document.getElementById("r3_2");
+  const r3 = document.getElementById("r3_3");
+  const rc = document.getElementById("r3_c");
+  const badge = document.getElementById("badge_complex");
+  if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
+
+  setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
+
+  const apply = ()=>{
+    let rows = complex.rows.slice();
+    if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
+    if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
+    if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
+    if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
+    render("complex", complex.cols, rows);
+    if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ") || "*"}`;
+  };
+
+  const refreshR2 = ()=>{
+    const rows1 = r1.value
+      ? complex.rows.filter(r => String(r.region1||"").trim() === r1.value)
+      : complex.rows;
+    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
+    setOpts(r3, [], "세부구(전체)");
+    setOpts(rc, [], "단지(전체)");
+  };
+
+  const refreshR3 = ()=>{
+    let rows2 = complex.rows.slice();
+    if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
+    if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
+    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
+    setOpts(rc, [], "단지(전체)");
+  };
+
+  const refreshComplex = ()=>{
+    let rows3 = complex.rows.slice();
+    if (r1.value) rows3 = rows3.filter(r => String(r.region1||"").trim() === r1.value);
+    if (r2.value) rows3 = rows3.filter(r => String(r.region2||"").trim() === r2.value);
+    if (r3.value) rows3 = rows3.filter(r => String(r.region3||"").trim() === r3.value);
+    setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
+  };
+
+  r1.onchange = ()=>{
+    refreshR2();
+    r2.value=""; r3.value=""; rc.value="";
+    apply();
+  };
+  r2.onchange = ()=>{
+    refreshR3();
+    r3.value=""; rc.value="";
+    apply();
+  };
+  r3.onchange = ()=>{
+    refreshComplex();
+    rc.value="";
+    apply();
+  };
+  rc.onchange = apply;
+
+  refreshR2();
+  refreshR3();
+  refreshComplex();
+  apply();
+}
 </script>
 </body>
 </html>
