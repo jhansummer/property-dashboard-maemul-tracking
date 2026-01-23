@@ -19,540 +19,182 @@
     .title{font-size:16px;font-weight:700}
     .sub{font-size:12px;color:var(--muted)}
     .spacer{flex:1}
-    .pills{display:flex;gap:8px;flex-wrap:wrap}
-    .pill{background:var(--pill);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none}
-    .pill.on{background:var(--pillOn);border-color:#3a4a70;font-weight:bold}
-    .badge{font-size:11px;color:#cfe0ff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
+    .pills{display:flex;gap:8px}
+    .pill{background:var(--pill);border:1px solid var(--line);padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer}
+    .pill.on{background:var(--pillOn);font-weight:bold}
+    .badge{font-size:11px;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:#0f1626}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
-    .card h2{margin:0 0 10px 0;font-size:15px;color:#fff}
-    .hint{font-size:12px;color:var(--muted);margin-bottom:10px}
-    .tableWrap{overflow:auto;border-radius:12px;border:1px solid var(--line);background:#0f1626}
-    table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
-    thead th{position:sticky;top:0;background:#1a2640;color:#cfe0ff;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px;white-space:nowrap}
-    tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px;color:var(--text);white-space:nowrap}
-    tbody tr:hover td{background:rgba(138,180,255,.06)}
-    .num{text-align:right;font-variant-numeric:tabular-nums}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    thead th{position:sticky;top:0;background:#1a2640;padding:10px;font-size:12px}
+    tbody td{padding:10px;border-bottom:1px solid rgba(36,49,74,.55);font-size:12px}
+    .num{text-align:right}
     .pct.good{color:var(--good);font-weight:700}
     .pct.bad{color:var(--bad);font-weight:700}
-    .mini{font-size:11px;color:var(--muted);margin-top:8px}
-    .loading-row td{text-align:center;padding:40px;color:var(--muted)}
-    .warn{margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);font-size:12px;white-space:pre-wrap}
-    select{
-      background:#0f1626;border:1px solid var(--line);color:var(--text);
-      padding:10px 10px;border-radius:12px;outline:none;font-size:13px
-    }
+    select{background:#0f1626;border:1px solid var(--line);color:var(--text);padding:8px;border-radius:10px}
   </style>
 </head>
 
 <body>
-  <div class="topbar">
-    <div class="wrap">
-      <div class="row">
-        <div>
-          <div class="title">매물 트래킹 대시보드(오늘과 지난주 같은요일 비교)</div>
-          <div class="sub" id="subtitle">데이터를 불러오는 중...</div>
-        </div>
-        <div class="spacer"></div>
-        <div class="pills" aria-label="trade type">
-          <div class="pill on" id="pillA1">A1 (매매)</div>
-          <div class="pill" id="pillB1">B1 (전세)</div>
-        </div>
-        <span class="badge" id="lastLoaded">loaded: -</span>
-      </div>
-    </div>
-  </div>
-
+<div class="topbar">
   <div class="wrap">
-
-    <div class="card">
-      <h2>1) 전체 통계</h2>
-      <div class="hint">• 면적 구간별 통합 데이터 (※ &lt;33, &gt;=165 제외 / ALL_BINS=전체)</div>
-      <div class="tableWrap">
-        <table>
-          <thead><tr id="thead_all"></tr></thead>
-          <tbody id="tbody_all"></tbody>
-        </table>
+    <div class="row">
+      <div>
+        <div class="title">매물 트래킹 대시보드</div>
+        <div class="sub" id="subtitle">로딩중…</div>
       </div>
-      <div class="mini" id="meta_all"></div>
-      <span class="badge" id="cnt_all">rows: -</span>
-      <div class="warn" id="warn_all" style="display:none"></div>
+      <div class="spacer"></div>
+      <div class="pills">
+        <div class="pill on" id="pillA1">A1 (매매)</div>
+        <div class="pill" id="pillB1">B1 (전세)</div>
+      </div>
+      <span class="badge" id="lastLoaded">-</span>
     </div>
-
-    <div class="card">
-      <h2>2) 지역별 상세</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <select id="r2_1"><option value="">서울/경기(전체)</option></select>
-        <select id="r2_2"><option value="">시·구(전체)</option></select>
-        <select id="r2_3"><option value="">세부구(전체)</option></select>
-        <span class="badge" id="badge_region">filter: *</span>
-      </div>
-      <div class="hint">• 지역 및 면적 구간별 데이터 (※ &lt;33, &gt;=165 제외 / ALL_BINS=전체)</div>
-      <div class="tableWrap">
-        <table>
-          <thead><tr id="thead_region"></tr></thead>
-          <tbody id="tbody_region"></tbody>
-        </table>
-      </div>
-      <div class="mini" id="meta_region"></div>
-      <span class="badge" id="cnt_region">rows: -</span>
-      <div class="warn" id="warn_region" style="display:none"></div>
-    </div>
-
-    <div class="card">
-      <h2>3) 단지별 상세</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <select id="r3_1"><option value="">서울/경기(전체)</option></select>
-        <select id="r3_2"><option value="">시·구(전체)</option></select>
-        <select id="r3_3"><option value="">세부구(전체)</option></select>
-        <select id="r3_c"><option value="">단지(전체)</option></select>
-        <span class="badge" id="badge_complex">filter: *</span>
-      </div>
-      <div class="hint">• 주요 단지별 상세 데이터 (※ &lt;33, &gt;=165 제외 / ALL_BINS=전체)</div>
-      <div class="tableWrap">
-        <table>
-          <thead><tr id="thead_complex"></tr></thead>
-          <tbody id="tbody_complex"></tbody>
-        </table>
-      </div>
-      <div class="mini" id="meta_complex"></div>
-      <span class="badge" id="cnt_complex">rows: -</span>
-      <div class="warn" id="warn_complex" style="display:none"></div>
-    </div>
-
   </div>
+</div>
+
+<div class="wrap">
+  <!-- 1 전체 -->
+  <div class="card">
+    <h3>1) 전체</h3>
+    <table>
+      <thead><tr id="thead_all"></tr></thead>
+      <tbody id="tbody_all"></tbody>
+    </table>
+    <span class="badge" id="cnt_all"></span>
+  </div>
+
+  <!-- 2 지역 -->
+  <div class="card">
+    <h3>2) 지역별</h3>
+    <select id="r2_1"></select>
+    <select id="r2_2"></select>
+    <select id="r2_3"></select>
+    <table>
+      <thead><tr id="thead_region"></tr></thead>
+      <tbody id="tbody_region"></tbody>
+    </table>
+    <span class="badge" id="cnt_region"></span>
+  </div>
+
+  <!-- 3 단지 -->
+  <div class="card">
+    <h3>3) 단지별</h3>
+    <select id="r3_1"></select>
+    <select id="r3_2"></select>
+    <select id="r3_3"></select>
+    <select id="r3_c"></select>
+    <table>
+      <thead><tr id="thead_complex"></tr></thead>
+      <tbody id="tbody_complex"></tbody>
+    </table>
+    <span class="badge" id="cnt_complex"></span>
+  </div>
+</div>
 
 <script>
-  /* =========================
-     화면 표시용 컬럼명 매핑
-  ========================= */
-  const COL_LABELS = {
-    level: "구분",
-    group: "집계",
-    hscpNo: "단지ID",
-    complex_name: "단지명",
-    region1: "광역",
-    region2: "시·구",
-    region3: "세부",
-
-    spc_bin: "전용면적(m2)",
-
-    prev_cnt: "이전 매물수",
-    prev_avg_eok: "이전 평균가(억)",
-
-    curr_cnt: "현재 매물수",
-    curr_avg_eok: "현재 평균가(억)",
-
-    avg_change_pct: "평균가 변화율",
-
-    new_cnt: "신규 매물수",
-    new_avg_eok: "신규 평균가(억)",
-    new_premium_pct: "신규매물가(평균대비%)",
-
-    del_cnt: "삭제 매물수",
-    del_avg_eok: "삭제 평균가(억)",
-    del_premium_pct: "삭제매물가(평균대비%)"
-  };
-
-  // 표별 숨길 컬럼
-  const HIDE_COLS = {
-    all:    new Set(["level", "group"]),
-    region: new Set(["level"]),
-    complex:new Set(["level", "hscpNo"]),
-  };
-
-  const VIEW_COLS = { all:[], region:[], complex:[] };
-
-  function setSubtitle(msg){
-    const el = document.getElementById("subtitle");
-    if (el) el.textContent = msg;
-  }
-  window.onerror = function(message, source, lineno, colno){
-    setSubtitle(`JS 오류: ${message} @${lineno}:${colno}`);
-  };
-  window.onunhandledrejection = function(ev){
-    const m = (ev && ev.reason) ? (ev.reason.message || String(ev.reason)) : "unknown";
-    setSubtitle(`Promise 오류: ${m}`);
-  };
-
-  const PATHS = {
-    A1: {
-      all:    "./report_all_bins_A1_latest.csv",
-      region: "./report_region_bins_A1_latest.csv",
-      complex:"./report_complex_bins_A1_latest.csv",
-    },
-    B1: {
-      all:    "./report_all_bins_B1_latest.csv",
-      region: "./report_region_bins_B1_latest.csv",
-      complex:"./report_complex_bins_B1_latest.csv",
-    }
-  };
-
-  let state = { type:"A1" };
-
-  // Robust CSV parser
-  function parseCSV(text){
-    if (!text) return {cols:[], rows:[], error:"empty response"};
-    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-
-    const rows = [];
-    let row = [];
-    let cell = "";
-    let inQ = false;
-
-    for (let i=0;i<text.length;i++){
-      const ch = text[i];
-
-      if (ch === '"'){
-        if (inQ && text[i+1] === '"'){ cell += '"'; i++; }
-        else inQ = !inQ;
-        continue;
-      }
-
-      if (!inQ && ch === ','){ row.push(cell); cell=""; continue; }
-      if (!inQ && ch === '\n'){ row.push(cell); cell=""; rows.push(row); row=[]; continue; }
-      if (ch === '\r') continue;
-      cell += ch;
-    }
-    if (cell.length || row.length){ row.push(cell); rows.push(row); }
-
-    const cleaned = rows.filter(r => r.some(c => String(c).trim().length > 0));
-    if (cleaned.length < 2) return {cols:[], rows:[], error:`lines<2 (${cleaned.length})`};
-
-    const cols = cleaned[0].map(s => String(s).trim());
-    if (!cols.length || cols.every(c => !c)) return {cols:[], rows:[], error:"header empty"};
-
-    const out = [];
-    for (let i=1;i<cleaned.length;i++){
-      const parts = cleaned[i];
-      const obj = {};
-      cols.forEach((c, idx) => obj[c] = (parts[idx] ?? "").toString().trim());
-      out.push(obj);
-    }
-    return {cols, rows: out};
-  }
-
-  // ✅ spc_bin: <33, >=165 제외 + ALL_BINS -> 전체
-  function transformRows(rows){
-    return (rows || [])
-      .filter(r => {
-        const b = String(r.spc_bin || "").trim();
-        return b !== "<33" && b !== ">=165";
-      })
-      .map(r => {
-        const b = String(r.spc_bin || "").trim();
-        if (b === "ALL_BINS") return { ...r, spc_bin: "전체" };
-        return r;
-      });
-  }
-
-  function toNum(x){
-    if (x == null) return null;
-    let s = String(x).trim();
-    if (!s || s === "-") return null;
-    if (s.endsWith('%')) s = s.slice(0, -1);
-    const v = parseFloat(s);
-    return Number.isFinite(v) ? v : null;
-  }
-  function pctClass(v){
-    if (v == null) return "";
-    if (v > 0) return "good";
-    if (v < 0) return "bad";
-    return "";
-  }
-
-  const NUM_COLS = new Set([
-    "prev_cnt","curr_cnt","new_cnt","del_cnt",
-    "prev_avg_eok","curr_avg_eok","new_avg_eok","del_avg_eok",
-    "avg_change_pct","new_premium_pct","del_premium_pct"
-  ]);
-
-  function showWarn(sectionId, msg){
-    const el = document.getElementById(`warn_${sectionId}`);
-    if (!el) return;
-    el.style.display = "block";
-    el.textContent = msg;
-  }
-  function hideWarn(sectionId){
-    const el = document.getElementById(`warn_${sectionId}`);
-    if (!el) return;
-    el.style.display = "none";
-    el.textContent = "";
-  }
-
-  function render(sectionId, cols, rows){
-    const thead = document.getElementById(`thead_${sectionId}`);
-    const tbody = document.getElementById(`tbody_${sectionId}`);
-    const meta  = document.getElementById(`meta_${sectionId}`);
-    const cnt   = document.getElementById(`cnt_${sectionId}`);
-    if (!thead || !tbody || !meta || !cnt) return;
-
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
-
-    if (!cols || cols.length === 0){
-      tbody.innerHTML = "<tr><td colspan='100' style='text-align:center; padding:20px;'>데이터가 없습니다.</td></tr>";
-      cnt.textContent = "rows: -";
-      meta.textContent = "";
-      return;
-    }
-
-    cols.forEach(c => {
-      const th = document.createElement("th");
-      th.textContent = COL_LABELS[c] || c;
-      thead.appendChild(th);
-    });
-
-    (rows || []).forEach(r => {
-      const tr = document.createElement("tr");
-      cols.forEach(c => {
-        const td = document.createElement("td");
-        const val = r[c] ?? "";
-        if (NUM_COLS.has(c)) td.classList.add("num");
-        if (String(val).includes('%')){
-          td.classList.add("pct");
-          const cls = pctClass(toNum(val));
-          if (cls) td.classList.add(cls);
-        }
-        td.textContent = val;
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-
-    cnt.textContent = `rows: ${(rows||[]).length}`;
-    meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
-  }
-
-  async function fetchTextWithTimeout(url, ms=10000){
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), ms);
-    try{
-      const res = await fetch(url, { signal: controller.signal });
-      const text = await res.text();
-      return { res, text };
-    } finally {
-      clearTimeout(t);
-    }
-  }
-
-  async function loadOne(kind){
-    const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
-    try {
-      const { res, text } = await fetchTextWithTimeout(url, 10000);
-      if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status}`};
-
-      const head = text.slice(0, 80).trim().toLowerCase();
-      if (head.startsWith("<!doctype html") || head.startsWith("<html")) {
-        return {cols:[], rows:[], error: `${kind}: got HTML not CSV`};
-      }
-
-      const parsed = parseCSV(text);
-      if (!parsed.cols.length){
-        return {cols:[], rows:[], error: `${kind}: parse cols=0 (${parsed.error||"unknown"})`};
-      }
-      return parsed;
-
-    } catch (e) {
-      const msg = (e && e.name === "AbortError") ? "timeout(10s)" : (e.message || String(e));
-      return {cols:[], rows:[], error: `${kind}: ${msg}`};
-    }
-  }
-
-  // dropdown helpers
-  function uniq(arr){
-    return Array.from(new Set((arr||[]).filter(x => x != null && String(x).trim() !== "")))
-      .map(x => String(x).trim())
-      .sort((a,b)=>a.localeCompare(b,"ko"));
-  }
-  function setOpts(sel, vals, ph){
-    const cur = (sel && sel.value) ? sel.value : "";
-    sel.innerHTML = `<option value="">${ph}</option>`;
-    (vals||[]).forEach(v=>{
-      const o=document.createElement("option");
-      o.value=v; o.textContent=v;
-      sel.appendChild(o);
-    });
-    if (cur && (vals||[]).includes(cur)) sel.value = cur;
-  }
-
-  function initRegionFilters(region){
-    const r1 = document.getElementById("r2_1");
-    const r2 = document.getElementById("r2_2");
-    const r3 = document.getElementById("r2_3");
-    const badge = document.getElementById("badge_region");
-    if (!r1 || !r2 || !r3 || !region || !region.rows) return;
-
-    setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
-
-    const refreshR2 = ()=>{
-      const rows1 = r1.value
-        ? region.rows.filter(r => String(r.region1||"").trim() === r1.value)
-        : region.rows;
-      setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
-      setOpts(r3, [], "세부구(전체)");
-    };
-
-    const refreshR3 = ()=>{
-      let rows2 = region.rows.slice();
-      if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
-      setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-    };
-
-    const apply = ()=>{
-      let rows = region.rows.slice();
-      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
-      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
-
-      render("region", VIEW_COLS.region, rows);
-
-      if (badge) badge.textContent =
-        `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ") || "*"}`;
-    };
-
-    r1.onchange = ()=>{ refreshR2(); r2.value=""; r3.value=""; apply(); };
-    r2.onchange = ()=>{ refreshR3(); r3.value=""; apply(); };
-    r3.onchange = apply;
-
-    refreshR2();
-    refreshR3();
-    apply();
-  }
-
-  function initComplexFilters(complex){
-    const r1 = document.getElementById("r3_1");
-    const r2 = document.getElementById("r3_2");
-    const r3 = document.getElementById("r3_3");
-    const rc = document.getElementById("r3_c");
-    const badge = document.getElementById("badge_complex");
-    if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
-
-    setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
-
-    const refreshR2 = ()=>{
-      const rows1 = r1.value
-        ? complex.rows.filter(r => String(r.region1||"").trim() === r1.value)
-        : complex.rows;
-      setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
-      setOpts(r3, [], "세부구(전체)");
-      setOpts(rc, [], "단지(전체)");
-    };
-
-    const refreshR3 = ()=>{
-      let rows2 = complex.rows.slice();
-      if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
-      setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-      setOpts(rc, [], "단지(전체)");
-    };
-
-    const refreshComplex = ()=>{
-      let rows3 = complex.rows.slice();
-      if (r1.value) rows3 = rows3.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows3 = rows3.filter(r => String(r.region2||"").trim() === r2.value);
-      if (r3.value) rows3 = rows3.filter(r => String(r.region3||"").trim() === r3.value);
-      setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
-    };
-
-    const apply = ()=>{
-      let rows = complex.rows.slice();
-      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
-      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
-      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
-      if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
-
-      render("complex", VIEW_COLS.complex, rows);
-
-      if (badge) badge.textContent =
-        `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ") || "*"}`;
-    };
-
-    r1.onchange = ()=>{ refreshR2(); r2.value=""; r3.value=""; rc.value=""; apply(); };
-    r2.onchange = ()=>{ refreshR3(); r3.value=""; rc.value=""; apply(); };
-    r3.onchange = ()=>{ refreshComplex(); rc.value=""; apply(); };
-    rc.onchange = apply;
-
-    refreshR2();
-    refreshR3();
-    refreshComplex();
-    apply();
-  }
-
-  async function loadAll(){
-    setSubtitle(`${state.type} 데이터를 불러오는 중...`);
-
-    ["all","region","complex"].forEach(id => {
-      hideWarn(id);
-      const tb = document.getElementById(`tbody_${id}`);
-      const th = document.getElementById(`thead_${id}`);
-      const c  = document.getElementById(`cnt_${id}`);
-      const m  = document.getElementById(`meta_${id}`);
-      if (tb) tb.innerHTML = "<tr class='loading-row'><td colspan='100'>데이터 로딩 중...</td></tr>";
-      if (th) th.innerHTML = "";
-      if (c)  c.textContent = "rows: -";
-      if (m)  m.textContent = "";
-    });
-
-    const results = await Promise.allSettled([
-      loadOne("all"),
-      loadOne("region"),
-      loadOne("complex"),
-    ]);
-
-    const allRaw     = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
-    const regionRaw  = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
-    const complexRaw = (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
-
-    // ✅ 행 가공 적용 (<33, >=165 제거 + ALL_BINS -> 전체)
-    const all = {
-      ...allRaw,
-      rows: transformRows(allRaw.rows || [])
-    };
-    const region = {
-      ...regionRaw,
-      rows: transformRows(regionRaw.rows || [])
-    };
-    const complex = {
-      ...complexRaw,
-      rows: transformRows(complexRaw.rows || [])
-    };
-
-    VIEW_COLS.all     = (all.cols||[]).filter(c => !HIDE_COLS.all.has(c));
-    VIEW_COLS.region  = (region.cols||[]).filter(c => !HIDE_COLS.region.has(c));
-    VIEW_COLS.complex = (complex.cols||[]).filter(c => !HIDE_COLS.complex.has(c));
-
-    render("all", VIEW_COLS.all, all.rows);
-    render("region", VIEW_COLS.region, region.rows);
-    render("complex", VIEW_COLS.complex, complex.rows);
-
-    initRegionFilters(region);
-    initComplexFilters(complex);
-
-    const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
-    if (errors.length > 0) {
-      setSubtitle(`일부 로딩 실패: ${errors.join(" | ")}`);
-      if (all.error) showWarn("all", all.error);
-      if (region.error) showWarn("region", region.error);
-      if (complex.error) showWarn("complex", complex.error);
-    } else {
-      document.getElementById("lastLoaded").textContent = `loaded: ${new Date().toLocaleTimeString()}`;
-      setSubtitle(`${state.type} · 모든 데이터가 정상적으로 표시됩니다.`);
-    }
-  }
-
-  function setType(t){
-    if (state.type === t) return;
-    state.type = t;
-    document.getElementById("pillA1").classList.toggle("on", t === "A1");
-    document.getElementById("pillB1").classList.toggle("on", t === "B1");
-    loadAll();
-  }
-
-  document.getElementById("pillA1").onclick = ()=> setType("A1");
-  document.getElementById("pillB1").onclick = ()=> setType("B1");
-
-  window.onload = loadAll;
+/* ===== 설정 ===== */
+const DEFAULT_REGION = { r1:"서울시", r2:"강남구", r3:"" };
+const HIDE_COLS = {
+  all:new Set(["level","group"]),
+  region:new Set(["level"]),
+  complex:new Set(["level","hscpNo"])
+};
+const VIEW_COLS = { all:[], region:[], complex:[] };
+
+const PATHS = {
+  A1:{all:"./report_all_bins_A1_latest.csv",region:"./report_region_bins_A1_latest.csv",complex:"./report_complex_bins_A1_latest.csv"},
+  B1:{all:"./report_all_bins_B1_latest.csv",region:"./report_region_bins_B1_latest.csv",complex:"./report_complex_bins_B1_latest.csv"}
+};
+let state={type:"A1"};
+
+/* ===== 유틸 ===== */
+const uniq=a=>[...new Set(a.filter(Boolean))].sort();
+const toNum=v=>{if(!v)return null;v=String(v).replace('%','');const n=parseFloat(v);return isNaN(n)?null:n};
+const pctClass=v=>v>0?"good":v<0?"bad":"";
+
+/* ===== CSV ===== */
+function parseCSV(t){
+  if(!t)return{cols:[],rows:[]};
+  if(t.charCodeAt(0)===0xFEFF)t=t.slice(1);
+  const l=t.trim().split(/\r?\n/).map(r=>r.split(','));
+  const cols=l.shift();
+  return{cols,rows:l.map(r=>Object.fromEntries(cols.map((c,i)=>[c,r[i]||""])))};
+}
+
+/* ===== 렌더 ===== */
+function render(sec,cols,rows){
+  document.getElementById(`thead_${sec}`).innerHTML=cols.map(c=>`<th>${c}</th>`).join("");
+  document.getElementById(`tbody_${sec}`).innerHTML=rows.map(r=>
+    `<tr>${cols.map(c=>{
+      const v=r[c]||"";
+      const n=toNum(v);
+      return `<td class="${n!=null?'num':''} ${v.includes('%')?`pct ${pctClass(n)}`:''}">${v}</td>`
+    }).join("")}</tr>`
+  ).join("");
+  document.getElementById(`cnt_${sec}`).textContent=`rows: ${rows.length}`;
+}
+
+/* ===== 데이터 가공 ===== */
+function transform(rows){
+  return rows
+    .filter(r=>!["<33",">=165"].includes(r.spc_bin))
+    .map(r=>r.spc_bin==="ALL_BINS"?{...r,spc_bin:"전체"}:r);
+}
+
+/* ===== 로드 ===== */
+async function loadOne(kind){
+  const t=await fetch(PATHS[state.type][kind]+"?v="+Date.now()).then(r=>r.text());
+  return parseCSV(t);
+}
+
+async function loadAll(){
+  const all=await loadOne("all");
+  const region=await loadOne("region");
+  const complex=await loadOne("complex");
+
+  const allRows=transform(all.rows);
+  const regionRows=transform(region.rows);
+  const complexRows=transform(complex.rows);
+
+  VIEW_COLS.all=all.cols.filter(c=>!HIDE_COLS.all.has(c));
+  VIEW_COLS.region=region.cols.filter(c=>!HIDE_COLS.region.has(c));
+  VIEW_COLS.complex=complex.cols.filter(c=>!HIDE_COLS.complex.has(c));
+
+  render("all",VIEW_COLS.all,allRows);
+  render("region",VIEW_COLS.region,regionRows);
+  render("complex",VIEW_COLS.complex,complexRows);
+
+  initRegion(regionRows);
+  initComplex(complexRows);
+
+  document.getElementById("subtitle").textContent=`${state.type} 로드 완료`;
+  document.getElementById("lastLoaded").textContent=new Date().toLocaleTimeString();
+}
+
+/* ===== 드롭다운 ===== */
+function initRegion(rows){
+  const r1=document.getElementById("r2_1"),r2=document.getElementById("r2_2"),r3=document.getElementById("r2_3");
+  r1.innerHTML=`<option></option>`+uniq(rows.map(r=>r.region1)).map(v=>`<option>${v}</option>`).join("");
+  r1.value=DEFAULT_REGION.r1;
+  r2.innerHTML=uniq(rows.filter(r=>r.region1===r1.value).map(r=>r.region2)).map(v=>`<option>${v}</option>`).join("");
+  r2.value=DEFAULT_REGION.r2;
+  const apply=()=>render("region",VIEW_COLS.region,rows.filter(r=>(!r1.value||r.region1===r1.value)&&(!r2.value||r.region2===r2.value)));
+  r1.onchange=r2.onchange=apply; apply();
+}
+function initComplex(rows){
+  const r1=document.getElementById("r3_1"),r2=document.getElementById("r3_2"),r3=document.getElementById("r3_3"),rc=document.getElementById("r3_c");
+  r1.innerHTML=`<option></option>`+uniq(rows.map(r=>r.region1)).map(v=>`<option>${v}</option>`).join("");
+  r1.value=DEFAULT_REGION.r1;
+  r2.innerHTML=uniq(rows.filter(r=>r.region1===r1.value).map(r=>r.region2)).map(v=>`<option>${v}</option>`).join("");
+  r2.value=DEFAULT_REGION.r2;
+  const apply=()=>render("complex",VIEW_COLS.complex,rows.filter(r=>(!r1.value||r.region1===r1.value)&&(!r2.value||r.region2===r2.value)));
+  r1.onchange=r2.onchange=apply; apply();
+}
+
+/* ===== 토글 ===== */
+document.getElementById("pillA1").onclick=()=>{state.type="A1";loadAll()};
+document.getElementById("pillB1").onclick=()=>{state.type="B1";loadAll()};
+window.onload=loadAll;
 </script>
 </body>
 </html>
