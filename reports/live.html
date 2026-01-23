@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>매물 트래킹 대시보드 (Latest)</title>
+  <title>매물 트래킹 대시보드 (Live)</title>
   <style>
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
@@ -37,6 +37,7 @@
     .mini{font-size:11px;color:var(--muted);margin-top:8px}
     .loading-row td{text-align:center;padding:40px;color:var(--muted)}
     .warn{margin-top:10px;padding:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);border-radius:12px;color:var(--warn);font-size:12px;white-space:pre-wrap}
+    select{background:#0f1626;border:1px solid var(--line);color:var(--text);padding:10px 10px;border-radius:12px;outline:none;font-size:13px}
   </style>
 </head>
 
@@ -76,19 +77,15 @@
 
     <div class="card">
       <h2>2) 지역별 상세</h2>
+
       <!-- 지역별 드롭다운 -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <select id="r2_1">
-          <option value="">서울/경기(전체)</option>
-        </select>
-        <select id="r2_2">
-          <option value="">시·구(전체)</option>
-        </select>
-        <select id="r2_3">
-          <option value="">세부구(전체)</option>
-        </select>
+        <select id="r2_1"><option value="">서울/경기(전체)</option></select>
+        <select id="r2_2"><option value="">시·구(전체)</option></select>
+        <select id="r2_3"><option value="">세부구(전체)</option></select>
         <span class="badge" id="badge_region">filter: *</span>
       </div>
+
       <div class="hint">• 지역 및 면적 구간별 데이터</div>
       <div class="tableWrap">
         <table>
@@ -103,22 +100,16 @@
 
     <div class="card">
       <h2>3) 단지별 상세</h2>
+
       <!-- 단지별 드롭다운 -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <select id="r3_1">
-          <option value="">서울/경기(전체)</option>
-        </select>
-        <select id="r3_2">
-          <option value="">시·구(전체)</option>
-        </select>
-        <select id="r3_3">
-          <option value="">세부구(전체)</option>
-        </select>
-        <select id="r3_c">
-          <option value="">단지(전체)</option>
-        </select>
+        <select id="r3_1"><option value="">서울/경기(전체)</option></select>
+        <select id="r3_2"><option value="">시·구(전체)</option></select>
+        <select id="r3_3"><option value="">세부구(전체)</option></select>
+        <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
+
       <div class="hint">• 주요 단지별 상세 데이터</div>
       <div class="tableWrap">
         <table>
@@ -134,30 +125,32 @@
   </div>
 
 <script>
-    /* =========================
+  /* =========================
      화면 표시용 컬럼명 매핑
      ========================= */
   const COL_LABELS = {
     level: "구분",
     group: "집계",
     spc_bin: "평형구간",
+    region1: "광역",
+    region2: "시/구",
+    region3: "구/동",
+    hscpNo: "단지ID",
+    complex_name: "단지명",
 
     prev_cnt: "이전 매물수",
     prev_avg_eok: "이전 평균가(억)",
-
     curr_cnt: "현재 매물수",
     curr_avg_eok: "현재 평균가(억)",
-
     avg_change_pct: "평균가 변화율",
-
     new_cnt: "신규 매물수",
     new_avg_eok: "신규 평균가(억)",
     new_premium_pct: "신규 프리미엄",
-
     del_cnt: "삭제 매물수",
     del_avg_eok: "삭제 평균가(억)",
     del_premium_pct: "삭제 프리미엄"
   };
+
   // ---- Global error reporting (mobile-friendly) ----
   function setSubtitle(msg){
     const el = document.getElementById("subtitle");
@@ -278,7 +271,7 @@
 
     cols.forEach(c => {
       const th = document.createElement("th");
-      th.textContent = COL_LABELS[c] || c;  // 🔥 여기서 한글 치환
+      th.textContent = COL_LABELS[c] || c;
       thead.appendChild(th);
     });
 
@@ -340,6 +333,118 @@
     }
   }
 
+  /* ===============================
+     Dropdown logic (NO duplicates)
+     =============================== */
+  function uniq(arr){
+    return Array.from(new Set(arr.filter(x => x != null && String(x).trim() !== "")))
+      .map(x => String(x).trim())
+      .sort((a,b)=>a.localeCompare(b,"ko"));
+  }
+  function setOpts(sel, vals, ph){
+    const cur = sel.value || "";
+    sel.innerHTML = `<option value="">${ph}</option>`;
+    vals.forEach(v=>{
+      const o=document.createElement("option");
+      o.value=v; o.textContent=v;
+      sel.appendChild(o);
+    });
+    if (cur && vals.includes(cur)) sel.value = cur;
+  }
+
+  function initRegionFilters(region){
+    const r1 = document.getElementById("r2_1");
+    const r2 = document.getElementById("r2_2");
+    const r3 = document.getElementById("r2_3");
+    const badge = document.getElementById("badge_region");
+    if (!r1 || !r2 || !r3 || !region || !region.rows) return;
+
+    setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
+
+    const apply = ()=>{
+      let rows = region.rows.slice();
+      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
+      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
+      render("region", region.cols, rows);
+      if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ") || "*"}`;
+    };
+
+    const refreshR2 = ()=>{
+      const rows1 = r1.value
+        ? region.rows.filter(r => String(r.region1||"").trim() === r1.value)
+        : region.rows;
+      setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
+      setOpts(r3, [], "세부구(전체)");
+    };
+
+    const refreshR3 = ()=>{
+      let rows2 = region.rows.slice();
+      if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
+      setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
+    };
+
+    r1.onchange = ()=>{ refreshR2(); r2.value=""; r3.value=""; apply(); };
+    r2.onchange = ()=>{ refreshR3(); r3.value=""; apply(); };
+    r3.onchange = apply;
+
+    refreshR2(); refreshR3(); apply();
+  }
+
+  function initComplexFilters(complex){
+    const r1 = document.getElementById("r3_1");
+    const r2 = document.getElementById("r3_2");
+    const r3 = document.getElementById("r3_3");
+    const rc = document.getElementById("r3_c");
+    const badge = document.getElementById("badge_complex");
+    if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
+
+    setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
+
+    const apply = ()=>{
+      let rows = complex.rows.slice();
+      if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
+      if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
+      if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
+      render("complex", complex.cols, rows);
+      if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ") || "*"}`;
+    };
+
+    const refreshR2 = ()=>{
+      const rows1 = r1.value
+        ? complex.rows.filter(r => String(r.region1||"").trim() === r1.value)
+        : complex.rows;
+      setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
+      setOpts(r3, [], "세부구(전체)");
+      setOpts(rc, [], "단지(전체)");
+    };
+
+    const refreshR3 = ()=>{
+      let rows2 = complex.rows.slice();
+      if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
+      setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
+      setOpts(rc, [], "단지(전체)");
+    };
+
+    const refreshComplex = ()=>{
+      let rows3 = complex.rows.slice();
+      if (r1.value) rows3 = rows3.filter(r => String(r.region1||"").trim() === r1.value);
+      if (r2.value) rows3 = rows3.filter(r => String(r.region2||"").trim() === r2.value);
+      if (r3.value) rows3 = rows3.filter(r => String(r.region3||"").trim() === r3.value);
+      setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
+    };
+
+    r1.onchange = ()=>{ refreshR2(); r2.value=""; r3.value=""; rc.value=""; apply(); };
+    r2.onchange = ()=>{ refreshR3(); r3.value=""; rc.value=""; apply(); };
+    r3.onchange = ()=>{ refreshComplex(); rc.value=""; apply(); };
+    rc.onchange = apply;
+
+    refreshR2(); refreshR3(); refreshComplex(); apply();
+  }
+
   async function loadAll(){
     setSubtitle(`${state.type} 데이터를 불러오는 중...`);
 
@@ -351,26 +456,23 @@
       document.getElementById(`meta_${id}`).textContent = "";
     });
 
-    // one failure shouldn't block the rest
     const results = await Promise.allSettled([
       loadOne("all"),
       loadOne("region"),
       loadOne("complex"),
     ]);
-    const all    = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
-    const region = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
-    const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
+    const all     = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
+    const region  = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
+    const complex = (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
 
     render("all", all.cols, all.rows);
     render("region", region.cols, region.rows);
     render("complex", complex.cols, complex.rows);
 
-    // ✅ 이 2줄 추가
+    // init dropdowns (these will re-render region/complex with filtered rows)
     initRegionFilters(region);
     initComplexFilters(complex);
-    
-    window.lastRegion = region;
-    window.lastComplex = complex;
+
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
     if (errors.length > 0) {
       setSubtitle(`일부 로딩 실패: ${errors.join(" | ")}`);
@@ -392,269 +494,6 @@
   }
 
   window.onload = loadAll;
-  /* ===============================
-   Dropdown helpers
-=============================== */
-const uniq = arr =>
-  [...new Set(arr.filter(x=>x && String(x).trim()!==""))]
-    .map(x=>String(x).trim())
-    .sort((a,b)=>a.localeCompare(b,"ko"));
-
-function setOpts(sel, vals, ph){
-  const cur = sel.value;
-  sel.innerHTML = `<option value="">${ph}</option>`;
-  vals.forEach(v=>{
-    const o=document.createElement("option");
-    o.value=v; o.textContent=v;
-    sel.appendChild(o);
-  });
-  if (vals.includes(cur)) sel.value = cur;
-}
-
-/* ===============================
-   2번 표: 지역별 드롭다운
-=============================== */
-function initRegionFilters(region){
-  if (!region || !region.rows) return;
-
-  const r1 = document.getElementById("r2_1");
-  const r2 = document.getElementById("r2_2");
-  const r3 = document.getElementById("r2_3");
-  const badge = document.getElementById("badge_region");
-  if (!r1||!r2||!r3) return;
-
-  setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
-  setOpts(r2, [], "시·구(전체)");
-  setOpts(r3, [], "세부구(전체)");
-
-  const apply = ()=>{
-    let rows = region.rows.slice();
-    if (r1.value) rows = rows.filter(r=>r.region1===r1.value);
-    if (r2.value) rows = rows.filter(r=>r.region2===r2.value);
-    if (r3.value) rows = rows.filter(r=>r.region3===r3.value);
-    render("region", region.cols, rows);
-    badge.textContent =
-      `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ")||"*"}`
-  };
-
-  r1.onchange = ()=>{
-    const rows1 = r1.value ? region.rows.filter(r=>r.region1===r1.value) : region.rows;
-    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
-    setOpts(r3, [], "세부구(전체)");
-    apply();
-  };
-
-  r2.onchange = ()=>{
-    let rows2 = region.rows;
-    if (r1.value) rows2 = rows2.filter(r=>r.region1===r1.value);
-    if (r2.value) rows2 = rows2.filter(r=>r.region2===r2.value);
-    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-    apply();
-  };
-
-  r3.onchange = apply;
-  apply();
-}
-
-/* ===============================
-   3번 표: 지역 + 단지 드롭다운
-=============================== */
-function initComplexFilters(complex){
-  if (!complex || !complex.rows) return;
-
-  const r1 = document.getElementById("r3_1");
-  const r2 = document.getElementById("r3_2");
-  const r3 = document.getElementById("r3_3");
-  const rc = document.getElementById("r3_c");
-  const badge = document.getElementById("badge_complex");
-  if (!r1||!r2||!r3||!rc) return;
-
-  setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
-  setOpts(r2, [], "시·구(전체)");
-  setOpts(r3, [], "세부구(전체)");
-  setOpts(rc, [], "단지(전체)");
-
-  const apply = ()=>{
-    let rows = complex.rows.slice();
-    if (r1.value) rows = rows.filter(r=>r.region1===r1.value);
-    if (r2.value) rows = rows.filter(r=>r.region2===r2.value);
-    if (r3.value) rows = rows.filter(r=>r.region3===r3.value);
-    if (rc.value) rows = rows.filter(r=>r.complex_name===rc.value);
-    render("complex", complex.cols, rows);
-    badge.textContent =
-      `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ")||"*"}`
-  };
-
-  r1.onchange = ()=>{
-    const rows1 = r1.value ? complex.rows.filter(r=>r.region1===r1.value) : complex.rows;
-    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
-    setOpts(r3, [], "세부구(전체)");
-    setOpts(rc, [], "단지(전체)");
-    apply();
-  };
-
-  r2.onchange = ()=>{
-    let rows2 = complex.rows;
-    if (r1.value) rows2 = rows2.filter(r=>r.region1===r1.value);
-    if (r2.value) rows2 = rows2.filter(r=>r.region2===r2.value);
-    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-    setOpts(rc, [], "단지(전체)");
-    apply();
-  };
-
-  r3.onchange = ()=>{
-    let rows3 = complex.rows;
-    if (r1.value) rows3 = rows3.filter(r=>r.region1===r1.value);
-    if (r2.value) rows3 = rows3.filter(r=>r.region2===r2.value);
-    if (r3.value) rows3 = rows3.filter(r=>r.region3===r3.value);
-    setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
-    apply();
-  };
-
-  rc.onchange = apply;
-  apply();
-}
-
-// ===== dropdown helpers =====
-function uniq(arr){
-  return Array.from(new Set(arr.filter(x => x != null && String(x).trim() !== "")))
-    .map(x => String(x).trim())
-    .sort((a,b)=>a.localeCompare(b,"ko"));
-}
-function setOpts(sel, vals, ph){
-  const cur = sel.value || "";
-  sel.innerHTML = `<option value="">${ph}</option>`;
-  vals.forEach(v=>{
-    const o=document.createElement("option");
-    o.value=v; o.textContent=v;
-    sel.appendChild(o);
-  });
-  if (cur && vals.includes(cur)) sel.value = cur;
-}
-
-// ===== 2) region dropdown -> re-render region table =====
-function initRegionFilters(region){
-  const r1 = document.getElementById("r2_1");
-  const r2 = document.getElementById("r2_2");
-  const r3 = document.getElementById("r2_3");
-  const badge = document.getElementById("badge_region");
-  if (!r1 || !r2 || !r3 || !region || !region.rows) return;
-
-  // region1 options
-  setOpts(r1, uniq(region.rows.map(r=>r.region1)), "서울/경기(전체)");
-
-  const apply = ()=>{
-    let rows = region.rows.slice();
-    if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
-    if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
-    if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
-    render("region", region.cols, rows);
-    if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value].filter(Boolean).join(" / ") || "*"}`;
-  };
-
-  const refreshR2 = ()=>{
-    const rows1 = r1.value
-      ? region.rows.filter(r => String(r.region1||"").trim() === r1.value)
-      : region.rows;
-    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
-    // r3는 r2까지 선택된 이후 채우는 게 자연스러움
-    setOpts(r3, [], "세부구(전체)");
-  };
-
-  const refreshR3 = ()=>{
-    let rows2 = region.rows.slice();
-    if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
-    if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
-    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-  };
-
-  // bind
-  r1.onchange = ()=>{
-    refreshR2();
-    r2.value = ""; r3.value = "";
-    apply();
-  };
-  r2.onchange = ()=>{
-    refreshR3();
-    r3.value = "";
-    apply();
-  };
-  r3.onchange = apply;
-
-  // initial fill based on current selections (or empty)
-  refreshR2();
-  refreshR3();
-  apply();
-}
-
-// ===== 3) complex dropdown -> re-render complex table =====
-function initComplexFilters(complex){
-  const r1 = document.getElementById("r3_1");
-  const r2 = document.getElementById("r3_2");
-  const r3 = document.getElementById("r3_3");
-  const rc = document.getElementById("r3_c");
-  const badge = document.getElementById("badge_complex");
-  if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
-
-  setOpts(r1, uniq(complex.rows.map(r=>r.region1)), "서울/경기(전체)");
-
-  const apply = ()=>{
-    let rows = complex.rows.slice();
-    if (r1.value) rows = rows.filter(r => String(r.region1||"").trim() === r1.value);
-    if (r2.value) rows = rows.filter(r => String(r.region2||"").trim() === r2.value);
-    if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
-    if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
-    render("complex", complex.cols, rows);
-    if (badge) badge.textContent = `filter: ${[r1.value,r2.value,r3.value,rc.value].filter(Boolean).join(" / ") || "*"}`;
-  };
-
-  const refreshR2 = ()=>{
-    const rows1 = r1.value
-      ? complex.rows.filter(r => String(r.region1||"").trim() === r1.value)
-      : complex.rows;
-    setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
-    setOpts(r3, [], "세부구(전체)");
-    setOpts(rc, [], "단지(전체)");
-  };
-
-  const refreshR3 = ()=>{
-    let rows2 = complex.rows.slice();
-    if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
-    if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
-    setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-    setOpts(rc, [], "단지(전체)");
-  };
-
-  const refreshComplex = ()=>{
-    let rows3 = complex.rows.slice();
-    if (r1.value) rows3 = rows3.filter(r => String(r.region1||"").trim() === r1.value);
-    if (r2.value) rows3 = rows3.filter(r => String(r.region2||"").trim() === r2.value);
-    if (r3.value) rows3 = rows3.filter(r => String(r.region3||"").trim() === r3.value);
-    setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
-  };
-
-  r1.onchange = ()=>{
-    refreshR2();
-    r2.value=""; r3.value=""; rc.value="";
-    apply();
-  };
-  r2.onchange = ()=>{
-    refreshR3();
-    r3.value=""; rc.value="";
-    apply();
-  };
-  r3.onchange = ()=>{
-    refreshComplex();
-    rc.value="";
-    apply();
-  };
-  rc.onchange = apply;
-
-  refreshR2();
-  refreshR3();
-  refreshComplex();
-  apply();
-}
 </script>
 </body>
 </html>
