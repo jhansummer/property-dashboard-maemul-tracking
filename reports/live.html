@@ -495,11 +495,22 @@
     const all     = (results[0].status==="fulfilled") ? results[0].value : {error:String(results[0].reason)};
     const region  = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
     const complex = (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
+    // 표별 숨길 컬럼 정의
+    const HIDE_COLS = {
+      all:    new Set(["level", "group"]),
+      region: new Set(["level"]),
+      complex:new Set(["level", "hscpNo"]),
+    };
+    const allColsFiltered =
+      all.cols.filter(c => !HIDE_COLS.all.has(c));
+    const regionColsFiltered =
+      region.cols.filter(c => !HIDE_COLS.region.has(c));
+    const complexColsFiltered =
+      complex.cols.filter(c => !HIDE_COLS.complex.has(c));
 
-    render("all", all.cols, all.rows);
-    render("region", region.cols, region.rows);
-    render("complex", complex.cols, complex.rows);
-
+    render("all", allColsFiltered, all.rows);
+    render("region", regionColsFiltered, region.rows);
+    render("complex", complexColsFiltered, complex.rows);
     // init dropdowns (these will re-render region/complex)
     initRegionFilters(region);
     initComplexFilters(complex);
