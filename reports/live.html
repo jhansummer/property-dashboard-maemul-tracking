@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>매물 트래킹 대시보드 </title>
+  <title>매물 트래킹 대시보드</title>
   <style>
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
@@ -11,9 +11,9 @@
       --good:#66e3a6; --bad:#ff7b7b; --warn:#ffd166;
     }
     *{box-sizing:border-box}
-    html, body { max-width:100%; overflow-x:hidden; } /* ✅ 페이지 자체 가로 밀림 방지 */
+    html, body { max-width:100%; overflow-x:hidden; }
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1400px;margin:0 auto;padding:14px;overflow-x:hidden} /* ✅ wrap 가로 넘침 방지 */
+    .wrap{max-width:1400px;margin:0 auto;padding:14px;overflow-x:hidden}
 
     .topbar{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
     .topbar .wrap{padding:10px 14px}
@@ -30,7 +30,7 @@
     .hint{font-size:12px;color:var(--muted);margin-bottom:10px}
 
     .tableWrap{
-      overflow:auto;                 /* ✅ 표 영역에서만 가로 스크롤 */
+      overflow:auto;
       border-radius:12px;
       border:1px solid var(--line);
       background:#0f1626;
@@ -41,7 +41,7 @@
     table{
       border-collapse:separate;border-spacing:0;
       width:100%;
-      min-width:980px;              /* ✅ max-content 금지 (페이지 가로 밀림 원인) */
+      min-width:980px;
     }
 
     thead th{
@@ -61,6 +61,38 @@
       background:#0f1626;border:1px solid var(--line);color:var(--text);
       padding:10px 10px;border-radius:12px;outline:none;font-size:13px
     }
+
+    /* ✅ charts */
+    .chartGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    .chartBox{
+      border:1px solid var(--line);
+      background:#0f1626;
+      border-radius:12px;
+      padding:10px;
+      overflow:hidden;
+    }
+    .chartMeta{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+    .chartTitle{
+      font-size:12px;
+      color:#cfe0ff;
+      font-weight:700;
+    }
+    img.chart{
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius:10px;
+    }
   </style>
 </head>
 
@@ -77,12 +109,41 @@
           <div class="pill on" id="pillA1">매매</div>
           <div class="pill" id="pillB1">전세</div>
         </div>
-        <span class="badge" id="lastLoaded">loaded: -</span>
+        <span class="badge" id="lastLoaded">업데이트 일시 : -</span>
+        <span class="badge" id="dataMTime">데이터 수정 : -</span>
       </div>
     </div>
   </div>
 
   <div class="wrap">
+
+    <!-- ✅ 그래프 섹션 -->
+    <div class="card">
+      <h2>0) 그래프</h2>
+      <div class="hint">• 상단 토글(매매/전세)에 따라 그래프가 자동 변경됩니다.</div>
+
+      <div class="chartGrid">
+        <div class="chartBox">
+          <div class="chartMeta">
+            <span class="chartTitle">전체 매물수 추이</span>
+            <span class="badge" id="badge_cnt">image: -</span>
+          </div>
+          <img class="chart" id="img_cnt" alt="전체 매물수 추이 그래프" loading="lazy" />
+        </div>
+
+        <div class="chartBox">
+          <div class="chartMeta">
+            <span class="chartTitle">평균가 추이</span>
+            <span class="badge" id="badge_avg">image: -</span>
+          </div>
+          <img class="chart" id="img_avg" alt="평균가 추이 그래프" loading="lazy" />
+        </div>
+      </div>
+
+      <div class="mini" id="chart_hint">
+        ※ 그래프가 안 보이면: (1) reports/charts/ 경로에 png가 있는지 (2) GitHub Pages/서버 캐시가 아닌지 확인
+      </div>
+    </div>
 
     <div class="card">
       <h2>1) 전체 통계</h2>
@@ -97,27 +158,7 @@
       <span class="badge" id="cnt_all">rows: -</span>
       <div class="warn" id="warn_all" style="display:none"></div>
     </div>
-    <div class="card">
-      <h2>1-1) 추이 그래프</h2>
-      <div class="hint">• ALL_BINS(전체) 기준 시계열</div>
 
-      <div style="display:grid;gap:12px;grid-template-columns:1fr;align-items:start">
-        <div class="tableWrap" style="padding:12px">
-          <div class="sub" style="margin-bottom:6px">매매(A1) - 매물수/평균가</div>
-          <img src="./reports/charts/all_bins_A1_cnt.png" style="width:100%;height:auto;border-radius:10px" alt="A1 cnt">
-          <div style="height:10px"></div>
-          <img src="./reports/charts/all_bins_A1_avg.png" style="width:100%;height:auto;border-radius:10px" alt="A1 avg">
-        </div>
-
-        <div class="tableWrap" style="padding:12px">
-          <div class="sub" style="margin-bottom:6px">전세(B1) - 매물수/평균가</div>
-          <img src="./reports/charts/all_bins_B1_cnt.png" style="width:100%;height:auto;border-radius:10px" alt="B1 cnt">
-          <div style="height:10px"></div>
-          <img src="./reports/charts/all_bins_B1_avg.png" style="width:100%;height:auto;border-radius:10px" alt="B1 avg">
-        </div>
-      </div>
-    </div>
-    
     <div class="card">
       <h2>2) 지역별 상세</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
@@ -147,7 +188,7 @@
         <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
-      <div class="hint">• 주요 단지별 상세 데이터 (평형 구분 없이 ‘전체’만 표시)</div>
+      <div class="hint">• 주요 단지별 상세 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -187,7 +228,7 @@
     del_premium_pct: "삭제매물가(평균대비%)"
   };
 
-  // 1번: 구분, 집계 / 2번: 구분 / 3번: 구분, 단지ID
+  // 표별 숨길 컬럼
   const HIDE_COLS = {
     all:    new Set(["level", "group"]),
     region: new Set(["level"]),
@@ -210,14 +251,22 @@
 
   const PATHS = {
     A1: {
-      all:    "./report_all_bins_A1_latest.csv",
-      region: "./report_region_bins_A1_latest.csv",
-      complex:"./report_complex_bins_A1_latest.csv",
+      all:    "./reports/report_all_bins_A1_latest.csv",
+      region: "./reports/report_region_bins_A1_latest.csv",
+      complex:"./reports/report_complex_bins_A1_latest.csv",
+      charts: {
+        cnt: "./reports/charts/all_bins_A1_cnt.png",
+        avg: "./reports/charts/all_bins_A1_avg.png",
+      }
     },
     B1: {
-      all:    "./report_all_bins_B1_latest.csv",
-      region: "./report_region_bins_B1_latest.csv",
-      complex:"./report_complex_bins_B1_latest.csv",
+      all:    "./reports/report_all_bins_B1_latest.csv",
+      region: "./reports/report_region_bins_B1_latest.csv",
+      complex:"./reports/report_complex_bins_B1_latest.csv",
+      charts: {
+        cnt: "./reports/charts/all_bins_B1_cnt.png",
+        avg: "./reports/charts/all_bins_B1_avg.png",
+      }
     }
   };
 
@@ -306,18 +355,11 @@
     return (val ?? "");
   }
 
-  // 1/2번 공통: <33, >=165 제외
   function passSpcBinRow(r){
     const b = String(r?.spc_bin ?? "").trim();
     if (b === "<33") return false;
     if (b === ">=165") return false;
     return true;
-  }
-
-  // ✅ 3번(단지별) 전용: 평형 구분 없이 '전체(ALL_BINS)'만 통과
-  function passSpcBinRowComplex(r){
-    const b = String(r?.spc_bin ?? "").trim();
-    return b === "ALL_BINS";
   }
 
   function render(sectionId, cols, rows){
@@ -371,7 +413,7 @@
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), ms);
     try{
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
       const text = await res.text();
       return { res, text };
     } finally {
@@ -403,6 +445,37 @@
     }
   }
 
+  // ✅ HEAD로 Last-Modified 읽기 (가능할 때만 표시)
+  async function getLastModified(url){
+    try{
+      const res = await fetch(url + `?v=${Date.now()}`, { method: "HEAD", cache: "no-store" });
+      const lm = res.headers.get("last-modified");
+      return lm || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // ✅ 그래프 반영
+  async function renderCharts(){
+    const imgCnt = document.getElementById("img_cnt");
+    const imgAvg = document.getElementById("img_avg");
+    const badgeCnt = document.getElementById("badge_cnt");
+    const badgeAvg = document.getElementById("badge_avg");
+    if (!imgCnt || !imgAvg) return;
+
+    const cntUrl = PATHS[state.type].charts.cnt;
+    const avgUrl = PATHS[state.type].charts.avg;
+
+    const v = Date.now();
+    imgCnt.src = `${cntUrl}?v=${v}`;
+    imgAvg.src = `${avgUrl}?v=${v}`;
+
+    if (badgeCnt) badgeCnt.textContent = `image: ${state.type} (cnt)`;
+    if (badgeAvg) badgeAvg.textContent = `image: ${state.type} (avg)`;
+  }
+
+  // ===== dropdown helpers =====
   function uniq(arr){
     return Array.from(new Set((arr||[]).filter(x => x != null && String(x).trim() !== "")))
       .map(x => String(x).trim())
@@ -420,8 +493,8 @@
     if (cur && (vals||[]).includes(cur)) sel.value = cur;
   }
 
-  function setDefaultSeoulGangnam(level1Sel){
-    if (!level1Sel) return;
+  function setDefaultSeoulGangnam(level1Sel, level2Sel){
+    if (!level1Sel || !level2Sel) return;
     const hasSeoul = Array.from(level1Sel.options).some(o => o.value === "서울시");
     if (hasSeoul) level1Sel.value = "서울시";
   }
@@ -434,14 +507,11 @@
     if (!r1 || !r2 || !r3 || !region || !region.rows) return;
 
     const baseRows = (region.rows || []).filter(passSpcBinRow);
-
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
-    setDefaultSeoulGangnam(r1);
+    setDefaultSeoulGangnam(r1, r2);
 
     const refreshR2 = ()=>{
-      const rows1 = r1.value
-        ? baseRows.filter(r => String(r.region1||"").trim() === r1.value)
-        : baseRows;
+      const rows1 = r1.value ? baseRows.filter(r => String(r.region1||"").trim() === r1.value) : baseRows;
       setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
       setOpts(r3, [], "세부구(전체)");
 
@@ -487,16 +557,13 @@
     const badge = document.getElementById("badge_complex");
     if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
 
-    // ✅ 단지별은 '전체(ALL_BINS)'만 남김
-    const baseRows = (complex.rows || []).filter(passSpcBinRowComplex);
+    const baseRows = (complex.rows || []).filter(passSpcBinRow);
 
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
-    setDefaultSeoulGangnam(r1);
+    setDefaultSeoulGangnam(r1, r2);
 
     const refreshR2 = ()=>{
-      const rows1 = r1.value
-        ? baseRows.filter(r => String(r.region1||"").trim() === r1.value)
-        : baseRows;
+      const rows1 = r1.value ? baseRows.filter(r => String(r.region1||"").trim() === r1.value) : baseRows;
       setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
       setOpts(r3, [], "세부구(전체)");
       setOpts(rc, [], "단지(전체)");
@@ -520,6 +587,7 @@
       if (r1.value) rows3 = rows3.filter(r => String(r.region1||"").trim() === r1.value);
       if (r2.value) rows3 = rows3.filter(r => String(r.region2||"").trim() === r2.value);
       if (r3.value) rows3 = rows3.filter(r => String(r.region3||"").trim() === r3.value);
+
       setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
     };
 
@@ -550,6 +618,21 @@
   async function loadAll(){
     setSubtitle(`${state.type} 데이터를 불러오는 중...`);
 
+    // ✅ 페이지 로드 기준 "업데이트 일시"
+    const lastLoaded = document.getElementById("lastLoaded");
+    if (lastLoaded){
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mi = String(now.getMinutes()).padStart(2, "0");
+      lastLoaded.textContent = `업데이트 일시 : ${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    }
+
+    // ✅ 그래프 먼저 반영(캐시 방지)
+    await renderCharts();
+
     ["all","region","complex"].forEach(id => {
       hideWarn(id);
       const tb = document.getElementById(`tbody_${id}`);
@@ -576,12 +659,9 @@
     VIEW_COLS.region  = (region.cols||[]).filter(c => !HIDE_COLS.region.has(c));
     VIEW_COLS.complex = (complex.cols||[]).filter(c => !HIDE_COLS.complex.has(c));
 
-    // 1/2번: <33, >=165 제외
     const allRows     = (all.rows||[]).filter(passSpcBinRow);
     const regionRows  = (region.rows||[]).filter(passSpcBinRow);
-
-    // ✅ 3번: ALL_BINS만
-    const complexRows = (complex.rows||[]).filter(passSpcBinRowComplex);
+    const complexRows = (complex.rows||[]).filter(passSpcBinRow);
 
     render("all", VIEW_COLS.all, allRows);
     render("region", VIEW_COLS.region, regionRows);
@@ -590,6 +670,13 @@
     initRegionFilters({ cols: region.cols||[], rows: regionRows });
     initComplexFilters({ cols: complex.cols||[], rows: complexRows });
 
+    // ✅ 데이터 수정 시각(가능하면) - latest CSV의 Last-Modified 헤더 활용
+    const dataMTime = document.getElementById("dataMTime");
+    if (dataMTime){
+      const lm = await getLastModified(PATHS[state.type].all);
+      dataMTime.textContent = lm ? `데이터 수정 : ${lm}` : `데이터 수정 : (헤더 없음)`;
+    }
+
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
     if (errors.length > 0) {
       setSubtitle(`일부 로딩 실패: ${errors.join(" | ")}`);
@@ -597,16 +684,6 @@
       if (region.error) showWarn("region", region.error);
       if (complex.error) showWarn("complex", complex.error);
     } else {
-      const el = document.getElementById("lastLoaded");
-      if (el) {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
-        const dd = String(now.getDate()).padStart(2, "0");
-        const hh = String(now.getHours()).padStart(2, "0");
-        const mi = String(now.getMinutes()).padStart(2, "0");
-        el.textContent = `업데이트 일시 : ${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-      }
       setSubtitle(`${state.type} · 모든 데이터가 정상적으로 표시됩니다.`);
     }
   }
