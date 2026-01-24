@@ -97,7 +97,27 @@
       <span class="badge" id="cnt_all">rows: -</span>
       <div class="warn" id="warn_all" style="display:none"></div>
     </div>
+    <div class="card">
+      <h2>1-1) 추이 그래프</h2>
+      <div class="hint">• ALL_BINS(전체) 기준 시계열</div>
 
+      <div style="display:grid;gap:12px;grid-template-columns:1fr;align-items:start">
+        <div class="tableWrap" style="padding:12px">
+          <div class="sub" style="margin-bottom:6px">매매(A1) - 매물수/평균가</div>
+          <img src="./reports/charts/all_bins_A1_cnt.png" style="width:100%;height:auto;border-radius:10px" alt="A1 cnt">
+          <div style="height:10px"></div>
+          <img src="./reports/charts/all_bins_A1_avg.png" style="width:100%;height:auto;border-radius:10px" alt="A1 avg">
+        </div>
+
+        <div class="tableWrap" style="padding:12px">
+          <div class="sub" style="margin-bottom:6px">전세(B1) - 매물수/평균가</div>
+          <img src="./reports/charts/all_bins_B1_cnt.png" style="width:100%;height:auto;border-radius:10px" alt="B1 cnt">
+          <div style="height:10px"></div>
+          <img src="./reports/charts/all_bins_B1_avg.png" style="width:100%;height:auto;border-radius:10px" alt="B1 avg">
+        </div>
+      </div>
+    </div>
+    
     <div class="card">
       <h2>2) 지역별 상세</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
