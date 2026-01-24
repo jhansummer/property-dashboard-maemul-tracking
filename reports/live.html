@@ -62,12 +62,8 @@
       padding:10px 10px;border-radius:12px;outline:none;font-size:13px
     }
 
-    /* ✅ charts */
-    .chartGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
+    /* charts */
+    .chartGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
     .chartBox{
       border:1px solid var(--line);
       background:#0f1626;
@@ -75,24 +71,9 @@
       padding:10px;
       overflow:hidden;
     }
-    .chartMeta{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin-bottom:8px;
-    }
-    .chartTitle{
-      font-size:12px;
-      color:#cfe0ff;
-      font-weight:700;
-    }
-    img.chart{
-      display:block;
-      width:100%;
-      height:auto;
-      border-radius:10px;
-    }
+    .chartMeta{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+    .chartTitle{ font-size:12px; color:#cfe0ff; font-weight:700; }
+    img.chart{ display:block; width:100%; height:auto; border-radius:10px; }
   </style>
 </head>
 
@@ -117,7 +98,6 @@
 
   <div class="wrap">
 
-    <!-- ✅ 그래프 섹션 -->
     <div class="card">
       <h2>0) 그래프</h2>
       <div class="hint">• 상단 토글(매매/전세)에 따라 그래프가 자동 변경됩니다.</div>
@@ -129,6 +109,7 @@
             <span class="badge" id="badge_cnt">image: -</span>
           </div>
           <img class="chart" id="img_cnt" alt="전체 매물수 추이 그래프" loading="lazy" />
+          <div class="warn" id="warn_img_cnt" style="display:none"></div>
         </div>
 
         <div class="chartBox">
@@ -137,11 +118,12 @@
             <span class="badge" id="badge_avg">image: -</span>
           </div>
           <img class="chart" id="img_avg" alt="평균가 추이 그래프" loading="lazy" />
+          <div class="warn" id="warn_img_avg" style="display:none"></div>
         </div>
       </div>
 
       <div class="mini" id="chart_hint">
-        ※ 그래프가 안 보이면: (1) reports/charts/ 경로에 png가 있는지 (2) GitHub Pages/서버 캐시가 아닌지 확인
+        ※ 그래프가 안 보이면: reports/charts/에 png가 실제로 있는지 + 경로가 맞는지 확인
       </div>
     </div>
 
@@ -188,7 +170,7 @@
         <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
-      <div class="hint">• 주요 단지별 상세 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
+      <div class="hint">• 단지별 + 전용면적(spc_bin) 기준 상세 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -203,9 +185,6 @@
   </div>
 
 <script>
-  /* =========================
-     화면 표시용 컬럼명 매핑
-  ========================= */
   const COL_LABELS = {
     level: "구분",
     group: "집계",
@@ -228,10 +207,10 @@
     del_premium_pct: "삭제매물가(평균대비%)"
   };
 
-  // 표별 숨길 컬럼
   const HIDE_COLS = {
     all:    new Set(["level", "group"]),
     region: new Set(["level"]),
+    // ✅ 단지별은 전용면적(spc_bin) 포함해서 보여주되, 구분/단지ID만 숨김
     complex:new Set(["level", "hscpNo"]),
   };
 
@@ -249,28 +228,45 @@
     setSubtitle(`Promise 오류: ${m}`);
   };
 
-  const PATHS = {
+  // ✅ 후보 경로를 여러 개 두고 "실제로 존재하는 것"을 자동 선택
+  const CANDIDATES = {
     A1: {
-      all:    "./reports/report_all_bins_A1_latest.csv",
-      region: "./reports/report_region_bins_A1_latest.csv",
-      complex:"./reports/report_complex_bins_A1_latest.csv",
+      all:    ["./reports/report_all_bins_A1_latest.csv", "./report_all_bins_A1_latest.csv"],
+      region: ["./reports/report_region_bins_A1_latest.csv", "./report_region_bins_A1_latest.csv"],
+      complex:["./reports/report_complex_bins_A1_latest.csv", "./report_complex_bins_A1_latest.csv"],
       charts: {
-        cnt: "./reports/charts/all_bins_A1_cnt.png",
-        avg: "./reports/charts/all_bins_A1_avg.png",
+        cnt: ["./reports/charts/all_bins_A1_cnt.png", "./charts/all_bins_A1_cnt.png", "./reports/charts/all_bins_cnt.png"],
+        avg: ["./reports/charts/all_bins_A1_avg.png", "./charts/all_bins_A1_avg.png", "./reports/charts/all_bins_avg.png"],
       }
     },
     B1: {
-      all:    "./reports/report_all_bins_B1_latest.csv",
-      region: "./reports/report_region_bins_B1_latest.csv",
-      complex:"./reports/report_complex_bins_B1_latest.csv",
+      all:    ["./reports/report_all_bins_B1_latest.csv", "./report_all_bins_B1_latest.csv"],
+      region: ["./reports/report_region_bins_B1_latest.csv", "./report_region_bins_B1_latest.csv"],
+      complex:["./reports/report_complex_bins_B1_latest.csv", "./report_complex_bins_B1_latest.csv"],
       charts: {
-        cnt: "./reports/charts/all_bins_B1_cnt.png",
-        avg: "./reports/charts/all_bins_B1_avg.png",
+        cnt: ["./reports/charts/all_bins_B1_cnt.png", "./charts/all_bins_B1_cnt.png", "./reports/charts/all_bins_cnt.png"],
+        avg: ["./reports/charts/all_bins_B1_avg.png", "./charts/all_bins_B1_avg.png", "./reports/charts/all_bins_avg.png"],
       }
     }
   };
 
   let state = { type:"A1" };
+
+  async function existsUrl(url){
+    try{
+      const res = await fetch(url + `?v=${Date.now()}`, { method:"HEAD", cache:"no-store" });
+      return res.ok;
+    }catch(e){
+      return false;
+    }
+  }
+
+  async function pickFirstExisting(urls){
+    for (const u of (urls||[])){
+      if (await existsUrl(u)) return u;
+    }
+    return null;
+  }
 
   function parseCSV(text){
     if (!text) return {cols:[], rows:[], error:"empty response"};
@@ -347,14 +343,17 @@
     el.textContent = "";
   }
 
-  function displayCell(col, val){
+  // ✅ ALL_BINS → "전체"는 1번(all) 표에서만
+  function displayCell(sectionId, col, val){
     if (col === "spc_bin"){
       const s = String(val ?? "").trim();
-      if (s === "ALL_BINS") return "전체";
+      if (sectionId === "all" && s === "ALL_BINS") return "전체";
+      return s;
     }
     return (val ?? "");
   }
 
+  // ✅ spc_bin 행 제외: <33, >=165 (공통)
   function passSpcBinRow(r){
     const b = String(r?.spc_bin ?? "").trim();
     if (b === "<33") return false;
@@ -390,7 +389,7 @@
       cols.forEach(c => {
         const td = document.createElement("td");
         const raw = r[c] ?? "";
-        const val = displayCell(c, raw);
+        const val = displayCell(sectionId, c, raw);
 
         if (NUM_COLS.has(c)) td.classList.add("num");
         if (String(val).includes('%')){
@@ -413,7 +412,7 @@
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), ms);
     try{
-      const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
+      const res = await fetch(url + `?v=${Date.now()}`, { signal: controller.signal, cache: "no-store" });
       const text = await res.text();
       return { res, text };
     } finally {
@@ -422,30 +421,31 @@
   }
 
   async function loadOne(kind){
-    const url = PATHS[state.type][kind] + `?v=${Date.now()}`;
-    try {
-      const { res, text } = await fetchTextWithTimeout(url, 10000);
+    const picked = await pickFirstExisting(CANDIDATES[state.type][kind]);
+    if (!picked) return {cols:[], rows:[], error: `${kind}: file not found (path candidates all failed)`};
 
-      if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status}`};
+    try {
+      const { res, text } = await fetchTextWithTimeout(picked, 10000);
+      if (!res.ok) return {cols:[], rows:[], error: `${kind}: HTTP ${res.status} (${picked})`};
 
       const head = text.slice(0, 80).trim().toLowerCase();
       if (head.startsWith("<!doctype html") || head.startsWith("<html")) {
-        return {cols:[], rows:[], error: `${kind}: got HTML not CSV`};
+        return {cols:[], rows:[], error: `${kind}: got HTML not CSV (${picked})`};
       }
 
       const parsed = parseCSV(text);
       if (!parsed.cols.length){
-        return {cols:[], rows:[], error: `${kind}: parse cols=0 (${parsed.error||"unknown"})`};
+        return {cols:[], rows:[], error: `${kind}: parse cols=0 (${parsed.error||"unknown"}) (${picked})`};
       }
+      parsed.__url = picked;
       return parsed;
 
     } catch (e) {
       const msg = (e && e.name === "AbortError") ? "timeout(10s)" : (e.message || String(e));
-      return {cols:[], rows:[], error: `${kind}: ${msg}`};
+      return {cols:[], rows:[], error: `${kind}: ${msg} (${picked})`};
     }
   }
 
-  // ✅ HEAD로 Last-Modified 읽기 (가능할 때만 표시)
   async function getLastModified(url){
     try{
       const res = await fetch(url + `?v=${Date.now()}`, { method: "HEAD", cache: "no-store" });
@@ -456,7 +456,19 @@
     }
   }
 
-  // ✅ 그래프 반영
+  function showImgWarn(which, msg){
+    const el = document.getElementById(`warn_img_${which}`);
+    if (!el) return;
+    el.style.display = "block";
+    el.textContent = msg;
+  }
+  function hideImgWarn(which){
+    const el = document.getElementById(`warn_img_${which}`);
+    if (!el) return;
+    el.style.display = "none";
+    el.textContent = "";
+  }
+
   async function renderCharts(){
     const imgCnt = document.getElementById("img_cnt");
     const imgAvg = document.getElementById("img_avg");
@@ -464,18 +476,31 @@
     const badgeAvg = document.getElementById("badge_avg");
     if (!imgCnt || !imgAvg) return;
 
-    const cntUrl = PATHS[state.type].charts.cnt;
-    const avgUrl = PATHS[state.type].charts.avg;
+    hideImgWarn("cnt");
+    hideImgWarn("avg");
 
-    const v = Date.now();
-    imgCnt.src = `${cntUrl}?v=${v}`;
-    imgAvg.src = `${avgUrl}?v=${v}`;
+    const cntPicked = await pickFirstExisting(CANDIDATES[state.type].charts.cnt);
+    const avgPicked = await pickFirstExisting(CANDIDATES[state.type].charts.avg);
+
+    if (!cntPicked){
+      imgCnt.removeAttribute("src");
+      showImgWarn("cnt", `cnt png 경로를 못 찾음.\n시도: ${CANDIDATES[state.type].charts.cnt.join(" | ")}`);
+    } else {
+      imgCnt.src = `${cntPicked}?v=${Date.now()}`;
+    }
+
+    if (!avgPicked){
+      imgAvg.removeAttribute("src");
+      showImgWarn("avg", `avg png 경로를 못 찾음.\n시도: ${CANDIDATES[state.type].charts.avg.join(" | ")}`);
+    } else {
+      imgAvg.src = `${avgPicked}?v=${Date.now()}`;
+    }
 
     if (badgeCnt) badgeCnt.textContent = `image: ${state.type} (cnt)`;
     if (badgeAvg) badgeAvg.textContent = `image: ${state.type} (avg)`;
   }
 
-  // ===== dropdown helpers =====
+  // dropdown helpers
   function uniq(arr){
     return Array.from(new Set((arr||[]).filter(x => x != null && String(x).trim() !== "")))
       .map(x => String(x).trim())
@@ -507,6 +532,7 @@
     if (!r1 || !r2 || !r3 || !region || !region.rows) return;
 
     const baseRows = (region.rows || []).filter(passSpcBinRow);
+
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
     setDefaultSeoulGangnam(r1, r2);
 
@@ -598,6 +624,7 @@
       if (r3.value) rows = rows.filter(r => String(r.region3||"").trim() === r3.value);
       if (rc.value) rows = rows.filter(r => String(r.complex_name||"").trim() === rc.value);
 
+      // ✅ 단지별은 CSV에 있는 spc_bin(전용면적)별로 그대로 여러 행 표시됨
       render("complex", VIEW_COLS.complex, rows);
 
       if (badge) badge.textContent =
@@ -618,7 +645,7 @@
   async function loadAll(){
     setSubtitle(`${state.type} 데이터를 불러오는 중...`);
 
-    // ✅ 페이지 로드 기준 "업데이트 일시"
+    // 페이지 로드 기준 업데이트 일시
     const lastLoaded = document.getElementById("lastLoaded");
     if (lastLoaded){
       const now = new Date();
@@ -630,7 +657,7 @@
       lastLoaded.textContent = `업데이트 일시 : ${yyyy}-${mm}-${dd} ${hh}:${mi}`;
     }
 
-    // ✅ 그래프 먼저 반영(캐시 방지)
+    // 차트 먼저
     await renderCharts();
 
     ["all","region","complex"].forEach(id => {
@@ -670,10 +697,12 @@
     initRegionFilters({ cols: region.cols||[], rows: regionRows });
     initComplexFilters({ cols: complex.cols||[], rows: complexRows });
 
-    // ✅ 데이터 수정 시각(가능하면) - latest CSV의 Last-Modified 헤더 활용
+    // 데이터 수정 (가능하면 latest CSV의 Last-Modified)
     const dataMTime = document.getElementById("dataMTime");
     if (dataMTime){
-      const lm = await getLastModified(PATHS[state.type].all);
+      // all의 실제 로드된 url을 쓰면 더 정확
+      const url = all.__url || (await pickFirstExisting(CANDIDATES[state.type].all));
+      const lm = url ? await getLastModified(url) : null;
       dataMTime.textContent = lm ? `데이터 수정 : ${lm}` : `데이터 수정 : (헤더 없음)`;
     }
 
