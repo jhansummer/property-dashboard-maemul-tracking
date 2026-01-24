@@ -127,7 +127,7 @@
         <select id="r3_c"><option value="">단지(전체)</option></select>
         <span class="badge" id="badge_complex">filter: *</span>
       </div>
-      <div class="hint">• 주요 단지별 상세 데이터 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)</div>
+      <div class="hint">• 주요 단지별 상세 데이터 (평형 구분 없이 ‘전체’만 표시)</div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -143,7 +143,7 @@
 
 <script>
   /* =========================
-     화면 표시용 컬럼명 매핑 (✅ 한글 컬럼명 복구)
+     화면 표시용 컬럼명 매핑
   ========================= */
   const COL_LABELS = {
     level: "구분",
@@ -153,40 +153,29 @@
     region1: "광역",
     region2: "시·구",
     region3: "세부지역",
-
     spc_bin: "전용면적",
-
     prev_cnt: "이전 매물수",
     prev_avg_eok: "이전 평균가(억)",
-
     curr_cnt: "현재 매물수",
     curr_avg_eok: "현재 평균가(억)",
-
     avg_change_pct: "평균가 변화율",
-
     new_cnt: "신규 매물수",
     new_avg_eok: "신규 평균가(억)",
     new_premium_pct: "신규매물가(평균대비%)",
-
     del_cnt: "삭제 매물수",
     del_avg_eok: "삭제 평균가(억)",
     del_premium_pct: "삭제매물가(평균대비%)"
   };
 
-  // 표별 숨길 컬럼 (요구사항 반영)
-  // 1번: 구분, 집계
-  // 2번: 구분
-  // 3번: 구분, 단지ID
+  // 1번: 구분, 집계 / 2번: 구분 / 3번: 구분, 단지ID
   const HIDE_COLS = {
     all:    new Set(["level", "group"]),
     region: new Set(["level"]),
     complex:new Set(["level", "hscpNo"]),
   };
 
-  // 표별 실제 렌더에 사용할 컬럼(필터 적용 후) 캐시
   const VIEW_COLS = { all:[], region:[], complex:[] };
 
-  // ---- Global error reporting (mobile-friendly) ----
   function setSubtitle(msg){
     const el = document.getElementById("subtitle");
     if (el) el.textContent = msg;
@@ -214,7 +203,6 @@
 
   let state = { type:"A1" };
 
-  // Robust CSV parser (commas/quotes/newlines-in-quotes OK)
   function parseCSV(text){
     if (!text) return {cols:[], rows:[], error:"empty response"};
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
@@ -290,7 +278,6 @@
     el.textContent = "";
   }
 
-  // ✅ spc_bin 표시값 변환: ALL_BINS -> 전체
   function displayCell(col, val){
     if (col === "spc_bin"){
       const s = String(val ?? "").trim();
@@ -299,12 +286,18 @@
     return (val ?? "");
   }
 
-  // ✅ spc_bin 행 제외 규칙: (소형(33㎡ 미만), 대형(165㎡ 초과) 제외) (전체/지역/단지 공통)
+  // 1/2번 공통: <33, >=165 제외
   function passSpcBinRow(r){
     const b = String(r?.spc_bin ?? "").trim();
     if (b === "<33") return false;
     if (b === ">=165") return false;
     return true;
+  }
+
+  // ✅ 3번(단지별) 전용: 평형 구분 없이 '전체(ALL_BINS)'만 통과
+  function passSpcBinRowComplex(r){
+    const b = String(r?.spc_bin ?? "").trim();
+    return b === "ALL_BINS";
   }
 
   function render(sectionId, cols, rows){
@@ -324,7 +317,6 @@
       return;
     }
 
-    // ✅ 헤더 한글 치환
     cols.forEach(c => {
       const th = document.createElement("th");
       th.textContent = COL_LABELS[c] || c;
@@ -355,7 +347,6 @@
     meta.textContent = `columns(${cols.length}): ${cols.join(", ")}`;
   }
 
-  // fetch with timeout to prevent infinite loading
   async function fetchTextWithTimeout(url, ms=10000){
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), ms);
@@ -392,7 +383,6 @@
     }
   }
 
-  // ===== dropdown helpers =====
   function uniq(arr){
     return Array.from(new Set((arr||[]).filter(x => x != null && String(x).trim() !== "")))
       .map(x => String(x).trim())
@@ -410,16 +400,12 @@
     if (cur && (vals||[]).includes(cur)) sel.value = cur;
   }
 
-  function setDefaultSeoulGangnam(level1Sel, level2Sel){
-    if (!level1Sel || !level2Sel) return;
-    // region1 = 서울시 우선
+  function setDefaultSeoulGangnam(level1Sel){
+    if (!level1Sel) return;
     const hasSeoul = Array.from(level1Sel.options).some(o => o.value === "서울시");
     if (hasSeoul) level1Sel.value = "서울시";
   }
 
-  /* ===============================
-     2) region dropdown -> re-render region table
-  =============================== */
   function initRegionFilters(region){
     const r1 = document.getElementById("r2_1");
     const r2 = document.getElementById("r2_2");
@@ -430,9 +416,7 @@
     const baseRows = (region.rows || []).filter(passSpcBinRow);
 
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
-
-    // ✅ 기본값: 서울시 -> 강남구 (가능할 때)
-    setDefaultSeoulGangnam(r1, r2);
+    setDefaultSeoulGangnam(r1);
 
     const refreshR2 = ()=>{
       const rows1 = r1.value
@@ -441,7 +425,6 @@
       setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
       setOpts(r3, [], "세부구(전체)");
 
-      // ✅ 서울시 선택 시 강남구 자동(있으면)
       if (r1.value === "서울시") {
         const hasGangnam = Array.from(r2.options).some(o => o.value === "강남구");
         if (hasGangnam) r2.value = "강남구";
@@ -476,9 +459,6 @@
     apply();
   }
 
-  /* ===============================
-     3) complex dropdown -> re-render complex table
-  =============================== */
   function initComplexFilters(complex){
     const r1 = document.getElementById("r3_1");
     const r2 = document.getElementById("r3_2");
@@ -487,10 +467,11 @@
     const badge = document.getElementById("badge_complex");
     if (!r1 || !r2 || !r3 || !rc || !complex || !complex.rows) return;
 
-    const baseRows = (complex.rows || []).filter(passSpcBinRow);
+    // ✅ 단지별은 '전체(ALL_BINS)'만 남김
+    const baseRows = (complex.rows || []).filter(passSpcBinRowComplex);
 
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
-    setDefaultSeoulGangnam(r1, r2);
+    setDefaultSeoulGangnam(r1);
 
     const refreshR2 = ()=>{
       const rows1 = r1.value
@@ -519,8 +500,6 @@
       if (r1.value) rows3 = rows3.filter(r => String(r.region1||"").trim() === r1.value);
       if (r2.value) rows3 = rows3.filter(r => String(r.region2||"").trim() === r2.value);
       if (r3.value) rows3 = rows3.filter(r => String(r.region3||"").trim() === r3.value);
-
-      // ✅ 모바일에서 option이 너무 길면 선택 어려울 수 있어서 "단지명 (ID)" 같이 유니크하게 표기하고 싶으면 여기서 가공 가능
       setOpts(rc, uniq(rows3.map(r=>r.complex_name)), "단지(전체)");
     };
 
@@ -573,22 +552,21 @@
     const region = (results[1].status==="fulfilled") ? results[1].value : {error:String(results[1].reason)};
     const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
 
-    // ✅ 컬럼 필터링을 여기서 "한 번만" 적용하고 VIEW_COLS로 고정
     VIEW_COLS.all     = (all.cols||[]).filter(c => !HIDE_COLS.all.has(c));
     VIEW_COLS.region  = (region.cols||[]).filter(c => !HIDE_COLS.region.has(c));
     VIEW_COLS.complex = (complex.cols||[]).filter(c => !HIDE_COLS.complex.has(c));
 
-    // ✅ spc_bin 필터 적용 (소형(33㎡ 미만), 대형(165㎡ 초과) 제외)
+    // 1/2번: <33, >=165 제외
     const allRows     = (all.rows||[]).filter(passSpcBinRow);
     const regionRows  = (region.rows||[]).filter(passSpcBinRow);
-    const complexRows = (complex.rows||[]).filter(passSpcBinRow);
 
-    // ✅ 최초 렌더
+    // ✅ 3번: ALL_BINS만
+    const complexRows = (complex.rows||[]).filter(passSpcBinRowComplex);
+
     render("all", VIEW_COLS.all, allRows);
     render("region", VIEW_COLS.region, regionRows);
     render("complex", VIEW_COLS.complex, complexRows);
 
-    // ✅ 드롭다운(필터는 내부에서 baseRows를 다시 사용)
     initRegionFilters({ cols: region.cols||[], rows: regionRows });
     initComplexFilters({ cols: complex.cols||[], rows: complexRows });
 
@@ -607,8 +585,6 @@
         const dd = String(now.getDate()).padStart(2, "0");
         const hh = String(now.getHours()).padStart(2, "0");
         const mi = String(now.getMinutes()).padStart(2, "0");
-        
-
         el.textContent = `업데이트 일시 : ${yyyy}-${mm}-${dd} ${hh}:${mi}`;
       }
       setSubtitle(`${state.type} · 모든 데이터가 정상적으로 표시됩니다.`);
