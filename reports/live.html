@@ -97,7 +97,7 @@
   </div>
 
   <div class="wrap">
-
+    
     <div class="card">
       <h2>0) 그래프</h2>
       <div class="hint">• 상단 토글(매매/전세)에 따라 그래프가 자동 변경됩니다.</div>
@@ -700,7 +700,6 @@
     // 데이터 수정 (가능하면 latest CSV의 Last-Modified)
     const dataMTime = document.getElementById("dataMTime");
     if (dataMTime){
-      // all의 실제 로드된 url을 쓰면 더 정확
       const url = all.__url || (await pickFirstExisting(CANDIDATES[state.type].all));
       const lm = url ? await getLastModified(url) : null;
       dataMTime.textContent = lm ? `데이터 수정 : ${lm}` : `데이터 수정 : (헤더 없음)`;
