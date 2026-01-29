@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>매물트래킹</title>
+  <title>호가트래커</title>
   <style>
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#7f8ea3; --text:#e8eef7;
@@ -96,7 +96,7 @@
     <div class="wrap">
       <div class="row">
         <div>
-          <div class="title">매물트래킹</div>
+          <div class="title">호가트래커</div>
           <div class="sub" id="subtitle">데이터를 불러오는 중...</div>
         </div>
         <div class="spacer"></div>
@@ -366,11 +366,11 @@
     el.textContent = "";
   }
 
-  // ✅ ALL_BINS → "전체"는 1번(all) 표에서만
+  // ✅ ALL_BINS → "전체" (모든 표에서)
   function displayCell(sectionId, col, val){
     if (col === "spc_bin"){
       const s = String(val ?? "").trim();
-      if (sectionId === "all" && s === "ALL_BINS") return "전체";
+      if (s === "ALL_BINS") return "전체";
       return s;
     }
     return (val ?? "");
