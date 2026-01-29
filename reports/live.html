@@ -86,7 +86,8 @@
     .highlightCard .pctValue{ font-size:24px; font-weight:700; }
     .highlightCard.up .pctValue{ color:var(--good); }
     .highlightCard.down .pctValue{ color:var(--bad); }
-    @media(max-width:600px){ .highlightGrid{ grid-template-columns:1fr; } }
+    .highlightCard .binCounts{ font-size:11px; color:var(--muted); margin-top:6px; display:flex; flex-wrap:wrap; gap:6px; }
+    .highlightCard .binCounts span{ background:#1a2640; padding:2px 6px; border-radius:4px; }
   </style>
 </head>
 
@@ -115,11 +116,13 @@
         <span class="label">주간상승률 TOP</span>
         <span class="name" id="topUpName">-</span>
         <span class="pctValue" id="topUpPct">-</span>
+        <div class="binCounts" id="topUpBins"></div>
       </div>
       <div class="highlightCard down">
         <span class="label">주간하락률 TOP</span>
         <span class="name" id="topDownName">-</span>
         <span class="pctValue" id="topDownPct">-</span>
+        <div class="binCounts" id="topDownBins"></div>
       </div>
     </div>
 
@@ -666,9 +669,10 @@
     const nameIdx = cols.indexOf("complex_name");
     const pctIdx = cols.indexOf("avg_change_pct");
     const binIdx = cols.indexOf("spc_bin");
+    const cntIdx = cols.indexOf("curr_cnt");
     if (nameIdx < 0 || pctIdx < 0) return;
 
-    // ALL_BINS 행만 사용
+    // ALL_BINS 행만 사용하여 TOP 찾기
     const filtered = rows.filter(r => {
       const bin = binIdx >= 0 ? String(r.spc_bin||r[binIdx]||"") : "";
       return bin === "ALL_BINS";
@@ -685,18 +689,45 @@
       if (pct < minPct) { minPct = pct; topDown = { name, pct }; }
     });
 
+    // 평형대별 매물수 가져오기
+    const getBinCounts = (complexName) => {
+      const binOrder = ["33-65", "66-98", "99-131", "132-164"];
+      const counts = [];
+      binOrder.forEach(bin => {
+        const row = rows.find(r =>
+          (r.complex_name || r[nameIdx]) === complexName &&
+          (r.spc_bin || r[binIdx]) === bin
+        );
+        if (row) {
+          const cnt = parseInt(row.curr_cnt || row[cntIdx] || 0) || 0;
+          counts.push(`${bin}평:${cnt}`);
+        }
+      });
+      return counts;
+    };
+
     const upName = document.getElementById("topUpName");
     const upPct = document.getElementById("topUpPct");
+    const upBins = document.getElementById("topUpBins");
     const downName = document.getElementById("topDownName");
     const downPct = document.getElementById("topDownPct");
+    const downBins = document.getElementById("topDownBins");
 
     if (topUp && upName && upPct) {
       upName.textContent = topUp.name;
       upPct.textContent = (topUp.pct >= 0 ? "+" : "") + topUp.pct.toFixed(1) + "%";
+      if (upBins) {
+        const counts = getBinCounts(topUp.name);
+        upBins.innerHTML = counts.map(c => `<span>${c}</span>`).join("");
+      }
     }
     if (topDown && downName && downPct) {
       downName.textContent = topDown.name;
       downPct.textContent = (topDown.pct >= 0 ? "+" : "") + topDown.pct.toFixed(1) + "%";
+      if (downBins) {
+        const counts = getBinCounts(topDown.name);
+        downBins.innerHTML = counts.map(c => `<span>${c}</span>`).join("");
+      }
     }
   }
 
