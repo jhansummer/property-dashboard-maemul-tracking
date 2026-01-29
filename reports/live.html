@@ -376,11 +376,20 @@
     return (val ?? "");
   }
 
-  // ✅ spc_bin 행 제외: <33, >=165 (공통)
+  // ✅ spc_bin 행 제외: <33㎡, >=165㎡ (공통)
+  // 지역별: 구간 형식 (예: "<33", ">=165")
+  // 단지별: 실제 면적 형식 (예: "30㎡", "170㎡")
   function passSpcBinRow(r){
     const b = String(r?.spc_bin ?? "").trim();
+    // 기존 구간 형식
     if (b === "<33") return false;
     if (b === ">=165") return false;
+    // 실제 면적 형식 (숫자㎡)
+    const m = b.match(/^(\d+)㎡?$/);
+    if (m) {
+      const area = parseInt(m[1], 10);
+      if (area < 33 || area >= 165) return false;
+    }
     return true;
   }
 
