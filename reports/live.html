@@ -684,12 +684,21 @@
     initRegionFilters({ cols: region.cols||[], rows: regionRows });
     initComplexFilters({ cols: complex.cols||[], rows: complexRows });
 
-    // 데이터 수정 (가능하면 latest CSV의 Last-Modified)
+    // 데이터 수정 (가능하면 latest CSV의 Last-Modified, KST YYYY-MM-DD 형식)
     const dataMTime = document.getElementById("dataMTime");
     if (dataMTime){
       const url = all.__url || (await pickFirstExisting(CANDIDATES[state.type].all));
       const lm = url ? await getLastModified(url) : null;
-      dataMTime.textContent = lm ? `데이터 수정 : ${lm}` : `데이터 수정 : (헤더 없음)`;
+      if (lm) {
+        const d = new Date(lm);
+        const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+        const yyyy = kst.getUTCFullYear();
+        const mm = String(kst.getUTCMonth() + 1).padStart(2, "0");
+        const dd = String(kst.getUTCDate()).padStart(2, "0");
+        dataMTime.textContent = `데이터 수정 : ${yyyy}-${mm}-${dd}`;
+      } else {
+        dataMTime.textContent = `데이터 수정 : -`;
+      }
     }
 
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
