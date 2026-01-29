@@ -90,7 +90,6 @@
           <div class="pill on" id="pillA1">매매</div>
           <div class="pill" id="pillB1">전세</div>
         </div>
-        <span class="badge" id="lastLoaded">업데이트 일시 : -</span>
         <span class="badge" id="dataMTime">데이터 수정 : -</span>
       </div>
     </div>
@@ -644,18 +643,6 @@
 
   async function loadAll(){
     setSubtitle(`${state.type} 데이터를 불러오는 중...`);
-
-    // 페이지 로드 기준 업데이트 일시
-    const lastLoaded = document.getElementById("lastLoaded");
-    if (lastLoaded){
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
-      const hh = String(now.getHours()).padStart(2, "0");
-      const mi = String(now.getMinutes()).padStart(2, "0");
-      lastLoaded.textContent = `업데이트 일시 : ${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-    }
 
     // 차트 먼저
     await renderCharts();
