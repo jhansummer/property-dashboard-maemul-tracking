@@ -666,11 +666,22 @@
   }
 
   function updateHighlightCards(cols, rows){
-    const nameIdx = cols.indexOf("complex_name");
+    // 지역 데이터 사용 (region1, region2, region3)
+    const r1Idx = cols.indexOf("region1");
+    const r2Idx = cols.indexOf("region2");
+    const r3Idx = cols.indexOf("region3");
     const pctIdx = cols.indexOf("avg_change_pct");
     const binIdx = cols.indexOf("spc_bin");
     const cntIdx = cols.indexOf("curr_cnt");
-    if (nameIdx < 0 || pctIdx < 0) return;
+    if (pctIdx < 0) return;
+
+    // 지역명 생성 함수
+    const getRegionName = (r) => {
+      const r1 = String(r.region1 || r[r1Idx] || "").trim();
+      const r2 = String(r.region2 || r[r2Idx] || "").trim();
+      const r3 = String(r.region3 || r[r3Idx] || "").trim();
+      return [r2, r3].filter(Boolean).join(" ") || r1;
+    };
 
     // ALL_BINS 행만 사용하여 TOP 찾기
     const filtered = rows.filter(r => {
@@ -682,25 +693,31 @@
     let maxPct = -Infinity, minPct = Infinity;
 
     filtered.forEach(r => {
-      const name = r.complex_name || r[nameIdx] || "";
+      const name = getRegionName(r);
       const pctStr = String(r.avg_change_pct || r[pctIdx] || "0%").replace("%","").replace("+","");
       const pct = parseFloat(pctStr) || 0;
-      if (pct > maxPct) { maxPct = pct; topUp = { name, pct }; }
-      if (pct < minPct) { minPct = pct; topDown = { name, pct }; }
+      if (pct > maxPct) { maxPct = pct; topUp = { name, pct, row: r }; }
+      if (pct < minPct) { minPct = pct; topDown = { name, pct, row: r }; }
     });
 
-    // 평형대별 매물수 가져오기
-    const getBinCounts = (complexName) => {
+    // 면적대별 매물수 가져오기 (㎡ 단위로 표시)
+    const getBinCounts = (targetRow) => {
       const binOrder = ["33-65", "66-98", "99-131", "132-164"];
       const counts = [];
+      const r1 = String(targetRow.region1 || "").trim();
+      const r2 = String(targetRow.region2 || "").trim();
+      const r3 = String(targetRow.region3 || "").trim();
+
       binOrder.forEach(bin => {
         const row = rows.find(r =>
-          (r.complex_name || r[nameIdx]) === complexName &&
+          String(r.region1 || "").trim() === r1 &&
+          String(r.region2 || "").trim() === r2 &&
+          String(r.region3 || "").trim() === r3 &&
           (r.spc_bin || r[binIdx]) === bin
         );
         if (row) {
           const cnt = parseInt(row.curr_cnt || row[cntIdx] || 0) || 0;
-          counts.push(`${bin}평:${cnt}`);
+          counts.push(`${bin}㎡:${cnt}`);
         }
       });
       return counts;
@@ -717,7 +734,7 @@
       upName.textContent = topUp.name;
       upPct.textContent = (topUp.pct >= 0 ? "+" : "") + topUp.pct.toFixed(1) + "%";
       if (upBins) {
-        const counts = getBinCounts(topUp.name);
+        const counts = getBinCounts(topUp.row);
         upBins.innerHTML = counts.map(c => `<span>${c}</span>`).join("");
       }
     }
@@ -725,7 +742,7 @@
       downName.textContent = topDown.name;
       downPct.textContent = (topDown.pct >= 0 ? "+" : "") + topDown.pct.toFixed(1) + "%";
       if (downBins) {
-        const counts = getBinCounts(topDown.name);
+        const counts = getBinCounts(topDown.row);
         downBins.innerHTML = counts.map(c => `<span>${c}</span>`).join("");
       }
     }
@@ -774,8 +791,8 @@
     initRegionFilters({ cols: region.cols||[], rows: regionRows });
     initComplexFilters({ cols: complex.cols||[], rows: complexRows });
 
-    // 상승/하락 TOP 업데이트
-    updateHighlightCards(complex.cols||[], complexRows);
+    // 상승/하락 TOP 업데이트 (지역별 데이터 사용)
+    updateHighlightCards(region.cols||[], regionRows);
 
     // 데이터 수정 (가능하면 latest CSV의 Last-Modified, KST YYYY-MM-DD 형식)
     const dataMTime = document.getElementById("dataMTime");
