@@ -86,6 +86,10 @@
     .highlightCard .pctValue{ font-size:24px; font-weight:700; }
     .highlightCard.up .pctValue{ color:var(--good); }
     .highlightCard.down .pctValue{ color:var(--bad); }
+    .highlightCard .cntCompare{ font-size:13px; color:var(--text); margin-top:4px; }
+    .highlightCard .cntCompare .delta{ font-size:12px; margin-left:4px; }
+    .highlightCard .cntCompare .delta.up{ color:var(--good); }
+    .highlightCard .cntCompare .delta.down{ color:var(--bad); }
     .highlightCard .binCounts{ font-size:11px; color:var(--muted); margin-top:6px; display:flex; flex-wrap:wrap; gap:6px; }
     .highlightCard .binCounts span{ background:#1a2640; padding:2px 6px; border-radius:4px; }
   </style>
@@ -116,12 +120,14 @@
         <span class="label">주간상승률 TOP 1</span>
         <span class="name" id="top1Name">-</span>
         <span class="pctValue" id="top1Pct">-</span>
+        <div class="cntCompare" id="top1Cnt"></div>
         <div class="binCounts" id="top1Bins"></div>
       </div>
       <div class="highlightCard up">
         <span class="label">주간상승률 TOP 2</span>
         <span class="name" id="top2Name">-</span>
         <span class="pctValue" id="top2Pct">-</span>
+        <div class="cntCompare" id="top2Cnt"></div>
         <div class="binCounts" id="top2Bins"></div>
       </div>
     </div>
@@ -742,16 +748,31 @@
       return counts;
     };
 
+    // 매물수 비교 HTML 생성
+    const getCntCompareHtml = (row) => {
+      const prevCnt = parseInt(row.prev_cnt || 0) || 0;
+      const currCnt = parseInt(row.curr_cnt || 0) || 0;
+      const delta = currCnt - prevCnt;
+      const deltaClass = delta > 0 ? "up" : (delta < 0 ? "down" : "");
+      const deltaStr = delta > 0 ? `+${delta}` : `${delta}`;
+      return `매물 <b>${currCnt}</b>건 ← ${prevCnt}건 <span class="delta ${deltaClass}">(${deltaStr})</span>`;
+    };
+
     const top1Name = document.getElementById("top1Name");
     const top1Pct = document.getElementById("top1Pct");
+    const top1Cnt = document.getElementById("top1Cnt");
     const top1Bins = document.getElementById("top1Bins");
     const top2Name = document.getElementById("top2Name");
     const top2Pct = document.getElementById("top2Pct");
+    const top2Cnt = document.getElementById("top2Cnt");
     const top2Bins = document.getElementById("top2Bins");
 
     if (top1 && top1Name && top1Pct) {
       top1Name.textContent = top1.name;
       top1Pct.textContent = (top1.pct >= 0 ? "+" : "") + top1.pct.toFixed(1) + "%";
+      if (top1Cnt) {
+        top1Cnt.innerHTML = getCntCompareHtml(top1.row);
+      }
       if (top1Bins) {
         const counts = getBinCounts(top1.row);
         top1Bins.innerHTML = counts.map(c => `<span>${c}</span>`).join("");
@@ -760,6 +781,9 @@
     if (top2 && top2Name && top2Pct) {
       top2Name.textContent = top2.name;
       top2Pct.textContent = (top2.pct >= 0 ? "+" : "") + top2.pct.toFixed(1) + "%";
+      if (top2Cnt) {
+        top2Cnt.innerHTML = getCntCompareHtml(top2.row);
+      }
       if (top2Bins) {
         const counts = getBinCounts(top2.row);
         top2Bins.innerHTML = counts.map(c => `<span>${c}</span>`).join("");
