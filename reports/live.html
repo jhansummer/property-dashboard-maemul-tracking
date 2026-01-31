@@ -74,7 +74,6 @@
     .chartMeta{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
     .chartTitle{ font-size:12px; color:#cfe0ff; font-weight:700; }
     img.chart{ display:block; width:100%; height:auto; border-radius:10px; }
-    .chartDateRange{ display:flex; justify-content:space-between; padding:6px 10px 0; font-size:11px; color:var(--muted); }
 
     /* highlight cards */
     .highlightGrid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
@@ -160,7 +159,6 @@
             <span class="badge" id="badge_cnt">image: -</span>
           </div>
           <img class="chart" id="img_cnt" alt="전체 매물수 추이 그래프" loading="lazy" />
-          <div class="chartDateRange" id="dateRange_cnt"></div>
           <div class="warn" id="warn_img_cnt" style="display:none"></div>
         </div>
 
@@ -170,7 +168,6 @@
             <span class="badge" id="badge_avg">image: -</span>
           </div>
           <img class="chart" id="img_avg" alt="평균가 추이 그래프" loading="lazy" />
-          <div class="chartDateRange" id="dateRange_avg"></div>
           <div class="warn" id="warn_img_avg" style="display:none"></div>
         </div>
       </div>
@@ -556,16 +553,6 @@
 
     if (badgeCnt) badgeCnt.textContent = `단위 : 건수`;
     if (badgeAvg) badgeAvg.textContent = `단위 : 억원`;
-
-    // 날짜 범위 표시 (30일)
-    const today = new Date();
-    const day30ago = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
-    const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
-    const dateRangeText = `<span>${fmt(day30ago)}</span><span>${fmt(today)}</span>`;
-    const dateRangeCnt = document.getElementById("dateRange_cnt");
-    const dateRangeAvg = document.getElementById("dateRange_avg");
-    if (dateRangeCnt) dateRangeCnt.innerHTML = dateRangeText;
-    if (dateRangeAvg) dateRangeAvg.innerHTML = dateRangeText;
   }
 
   // dropdown helpers
