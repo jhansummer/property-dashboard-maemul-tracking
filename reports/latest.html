@@ -77,6 +77,10 @@
     <div class="card">
       <h2>2) 지역별 상세</h2>
       <div class="hint">• 지역 및 면적 구간별 데이터</div>
+      <div class="pills region-pills" style="margin-bottom:10px">
+        <div class="pill on" id="pillRegionSeoul" onclick="setRegion('서울시')">서울시</div>
+        <div class="pill" id="pillRegionGyeonggi" onclick="setRegion('경기도')">경기도</div>
+      </div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_region"></tr></thead>
@@ -91,6 +95,10 @@
     <div class="card">
       <h2>3) 단지별 상세</h2>
       <div class="hint">• 주요 단지별 상세 데이터</div>
+      <div class="pills complex-pills" style="margin-bottom:10px">
+        <div class="pill on" id="pillComplexSeoul" onclick="setComplexRegion('서울시')">서울시</div>
+        <div class="pill" id="pillComplexGyeonggi" onclick="setComplexRegion('경기도')">경기도</div>
+      </div>
       <div class="tableWrap">
         <table>
           <thead><tr id="thead_complex"></tr></thead>
@@ -131,7 +139,8 @@
     }
   };
 
-  let state = { type:"A1" };
+  let state = { type:"A1", region:"서울시", complexRegion:"서울시" };
+  let cachedData = { region: null, complex: null };
 
   // Robust CSV parser (commas/quotes/newlines-in-quotes OK)
   function parseCSV(text){
@@ -309,8 +318,21 @@
     const complex= (results[2].status==="fulfilled") ? results[2].value : {error:String(results[2].reason)};
 
     render("all", all.cols, all.rows);
-    render("region", region.cols, region.rows);
-    render("complex", complex.cols, complex.rows);
+
+    // Cache and filter region/complex data
+    if (region.cols && region.cols.length > 0) {
+      cachedData.region = region;
+      renderFiltered("region", region, "region1", state.region);
+    } else {
+      render("region", region.cols, region.rows);
+    }
+
+    if (complex.cols && complex.cols.length > 0) {
+      cachedData.complex = complex;
+      renderFiltered("complex", complex, "region1", state.complexRegion);
+    } else {
+      render("complex", complex.cols, complex.rows);
+    }
 
     const errors = [all, region, complex].filter(x => x && x.error).map(x => x.error);
     if (errors.length > 0) {
@@ -330,6 +352,31 @@
     document.getElementById("pillA1").classList.toggle("on", t === "A1");
     document.getElementById("pillB1").classList.toggle("on", t === "B1");
     loadAll();
+  }
+
+  function setRegion(r){
+    if (state.region === r) return;
+    state.region = r;
+    document.getElementById("pillRegionSeoul").classList.toggle("on", r === "서울시");
+    document.getElementById("pillRegionGyeonggi").classList.toggle("on", r === "경기도");
+    if (cachedData.region) {
+      renderFiltered("region", cachedData.region, "region1", r);
+    }
+  }
+
+  function setComplexRegion(r){
+    if (state.complexRegion === r) return;
+    state.complexRegion = r;
+    document.getElementById("pillComplexSeoul").classList.toggle("on", r === "서울시");
+    document.getElementById("pillComplexGyeonggi").classList.toggle("on", r === "경기도");
+    if (cachedData.complex) {
+      renderFiltered("complex", cachedData.complex, "region1", r);
+    }
+  }
+
+  function renderFiltered(sectionId, data, filterCol, filterVal){
+    const filtered = data.rows.filter(row => row[filterCol] === filterVal);
+    render(sectionId, data.cols, filtered);
   }
 
   window.onload = loadAll;
