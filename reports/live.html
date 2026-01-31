@@ -573,10 +573,10 @@
     if (cur && (vals||[]).includes(cur)) sel.value = cur;
   }
 
-  function setDefaultBundang(level1Sel){
+  function setDefaultSeoul(level1Sel){
     if (!level1Sel) return;
-    const hasGyeonggi = Array.from(level1Sel.options).some(o => o.value === "경기도");
-    if (hasGyeonggi) level1Sel.value = "경기도";
+    const hasSeoul = Array.from(level1Sel.options).some(o => o.value === "서울시");
+    if (hasSeoul) level1Sel.value = "서울시";
   }
 
   function initRegionFilters(region){
@@ -589,17 +589,12 @@
     const baseRows = (region.rows || []).filter(passSpcBinRow);
 
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
-    setDefaultBundang(r1);
+    setDefaultSeoul(r1);
 
     const refreshR2 = ()=>{
       const rows1 = r1.value ? baseRows.filter(r => String(r.region1||"").trim() === r1.value) : baseRows;
       setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
       setOpts(r3, [], "세부구(전체)");
-
-      if (r1.value === "경기도") {
-        const hasSeongnam = Array.from(r2.options).some(o => o.value === "성남시");
-        if (hasSeongnam) r2.value = "성남시";
-      }
     };
 
     const refreshR3 = ()=>{
@@ -607,11 +602,6 @@
       if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
       if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
       setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-
-      if (r1.value === "경기도" && r2.value === "성남시") {
-        const hasBundang = Array.from(r3.options).some(o => o.value === "분당구");
-        if (hasBundang) r3.value = "분당구";
-      }
     };
 
     const apply = ()=>{
@@ -646,18 +636,13 @@
     const baseRows = (complex.rows || []).filter(passSpcBinRow);
 
     setOpts(r1, uniq(baseRows.map(r=>r.region1)), "서울/경기(전체)");
-    setDefaultBundang(r1);
+    setDefaultSeoul(r1);
 
     const refreshR2 = ()=>{
       const rows1 = r1.value ? baseRows.filter(r => String(r.region1||"").trim() === r1.value) : baseRows;
       setOpts(r2, uniq(rows1.map(r=>r.region2)), "시·구(전체)");
       setOpts(r3, [], "세부구(전체)");
       setOpts(rc, [], "단지(전체)");
-
-      if (r1.value === "경기도") {
-        const hasSeongnam = Array.from(r2.options).some(o => o.value === "성남시");
-        if (hasSeongnam) r2.value = "성남시";
-      }
     };
 
     const refreshR3 = ()=>{
@@ -665,11 +650,6 @@
       if (r1.value) rows2 = rows2.filter(r => String(r.region1||"").trim() === r1.value);
       if (r2.value) rows2 = rows2.filter(r => String(r.region2||"").trim() === r2.value);
       setOpts(r3, uniq(rows2.map(r=>r.region3)), "세부구(전체)");
-
-      if (r1.value === "경기도" && r2.value === "성남시") {
-        const hasBundang = Array.from(r3.options).some(o => o.value === "분당구");
-        if (hasBundang) r3.value = "분당구";
-      }
       setOpts(rc, [], "단지(전체)");
     };
 
