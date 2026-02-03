@@ -1,0 +1,14 @@
+{
+  "version": "20260204",
+  "updated_at": "2026-02-04T06:27:47.490888",
+  "charts": {
+    "A1": {
+      "cnt": "all_bins_A1_cnt_20260204.png",
+      "avg": "all_bins_A1_avg_20260204.png"
+    },
+    "B1": {
+      "cnt": "all_bins_B1_cnt_20260204.png",
+      "avg": "all_bins_B1_avg_20260204.png"
+    }
+  }
+}

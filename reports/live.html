@@ -297,6 +297,30 @@
   };
 
   let state = { type:"A1" };
+  let chartsVersion = null;  // Cache for charts_version.json
+
+  async function fetchChartsVersion(){
+    // Try multiple paths for charts_version.json
+    // live.html is in reports/, so charts are in ./charts/ (relative to reports/)
+    const paths = [
+      "./charts/charts_version.json",
+      "./reports/charts/charts_version.json"
+    ];
+    for (const p of paths) {
+      try {
+        const res = await fetch(p + `?v=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          console.log("[charts] loaded version:", data.version);
+          return data;
+        }
+      } catch (e) {
+        // continue to next path
+      }
+    }
+    console.log("[charts] charts_version.json not found, using fallback");
+    return null;
+  }
 
   async function existsUrl(url){
     try{
@@ -534,21 +558,45 @@
     hideImgWarn("cnt");
     hideImgWarn("avg");
 
-    const cntPicked = await pickFirstExisting(CANDIDATES[state.type].charts.cnt);
-    const avgPicked = await pickFirstExisting(CANDIDATES[state.type].charts.avg);
+    // Try to load charts_version.json for dated filenames (cache busting)
+    if (!chartsVersion) {
+      chartsVersion = await fetchChartsVersion();
+    }
 
-    if (!cntPicked){
+    let cntUrl = null;
+    let avgUrl = null;
+
+    // If we have version info, use dated filenames first
+    if (chartsVersion && chartsVersion.charts && chartsVersion.charts[state.type]) {
+      const typeCharts = chartsVersion.charts[state.type];
+      // Try dated filenames first (live.html is in reports/, charts are in reports/charts/)
+      const datedCnt = `./charts/${typeCharts.cnt}`;
+      const datedAvg = `./charts/${typeCharts.avg}`;
+      console.log("[charts] trying dated:", datedCnt, datedAvg);
+      if (await existsUrl(datedCnt)) cntUrl = datedCnt;
+      if (await existsUrl(datedAvg)) avgUrl = datedAvg;
+    }
+
+    // Fall back to original candidates if dated files not found
+    if (!cntUrl) {
+      cntUrl = await pickFirstExisting(CANDIDATES[state.type].charts.cnt);
+    }
+    if (!avgUrl) {
+      avgUrl = await pickFirstExisting(CANDIDATES[state.type].charts.avg);
+    }
+
+    if (!cntUrl){
       imgCnt.removeAttribute("src");
       showImgWarn("cnt", `cnt png 경로를 못 찾음.\n시도: ${CANDIDATES[state.type].charts.cnt.join(" | ")}`);
     } else {
-      imgCnt.src = `${cntPicked}?v=${Date.now()}`;
+      imgCnt.src = `${cntUrl}?v=${Date.now()}`;
     }
 
-    if (!avgPicked){
+    if (!avgUrl){
       imgAvg.removeAttribute("src");
       showImgWarn("avg", `avg png 경로를 못 찾음.\n시도: ${CANDIDATES[state.type].charts.avg.join(" | ")}`);
     } else {
-      imgAvg.src = `${avgPicked}?v=${Date.now()}`;
+      imgAvg.src = `${avgUrl}?v=${Date.now()}`;
     }
 
     if (badgeCnt) badgeCnt.textContent = `단위 : 건수`;
