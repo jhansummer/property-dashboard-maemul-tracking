@@ -1,14 +1,14 @@
 {
-  "version": "20260217",
-  "updated_at": "2026-02-17T09:58:05.205082",
+  "version": "20260224",
+  "updated_at": "2026-02-24T02:12:51.868188",
   "charts": {
     "A1": {
-      "cnt": "all_bins_A1_cnt_20260217.png",
-      "avg": "all_bins_A1_avg_20260217.png"
+      "cnt": "all_bins_A1_cnt_20260224.png",
+      "avg": "all_bins_A1_avg_20260224.png"
     },
     "B1": {
-      "cnt": "all_bins_B1_cnt_20260217.png",
-      "avg": "all_bins_B1_avg_20260217.png"
+      "cnt": "all_bins_B1_cnt_20260224.png",
+      "avg": "all_bins_B1_avg_20260224.png"
     }
   }
 }
